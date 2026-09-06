@@ -1,93 +1,93 @@
 # ANTUMBRA
 
-**La couche de confiance de l'économie humains-machines.**
+**The trust layer of the human-machine economy.**
 
-ANTUMBRA est une blockchain de règlement privée par défaut, finalisée en
-moins de six secondes, minable sur processeur grand public, et gouvernée
-par une réputation que le capital ne peut pas acheter. Elle distingue les
-humains (les **Braises**, une par personne, sans biométrie) des agents
-logiciels (les **Ciphers**, parrainés, à périmètre de dépense révocable),
-et rend cette confiance vérifiable par n'importe quel contrat, comptable
-ou régulateur, sans jamais exposer les soldes.
+ANTUMBRA is a private-by-default settlement blockchain, finalized in
+under six seconds, mineable on commodity processors, and governed by a
+reputation that capital cannot buy. It separates humans (the **Embers**,
+one per person, no biometrics) from software agents (the **Ciphers**,
+sponsored, with a revocable spending perimeter), and makes that trust
+verifiable by any contract, accountant or regulator, without ever
+exposing balances.
 
-Le nom vient de l'astronomie : lors d'une éclipse annulaire,
-l'antéombre est la zone d'où l'on voit un anneau de lumière autour du
-disque sombre. C'est l'architecture même du réseau : un noyau privé par
-construction, entouré d'un anneau de vérification que chacun peut
-allumer, à la demande, sans exposer personne d'autre que soi.
+The name comes from astronomy: during an annular eclipse, the
+antumbra is the zone from which one sees a ring of light around the
+dark disk. That is the architecture of the network itself: a core that
+is private by construction, surrounded by a ring of verification that
+anyone can switch on, on demand, without exposing anyone else.
 
-## Les chiffres de référence
+## Reference numbers
 
-| Grandeur | Valeur |
+| Quantity | Value |
 |---|---|
-| Monnaie | ATU |
-| Plafond | 16 180 339 unités (le nombre d'or × 10<sup>7</sup>) |
-| Émission | 34 éclipses de 4 ans, ×0,618 par éclipse, cap exact en 136 ans |
-| Blocs | toutes les 2 secondes (BlockDAG type GHOSTDAG) |
-| Finalité économique | moins de 6 secondes (checkpoints de l'Anneau, 37/55) |
-| Minage | RandomX, processeur seul : un ordinateur, une part |
-| Confidentialité | anneau de 16, montants engagés (Pedersen), Tor par défaut |
-| Divulgation | sélective à trois niveaux (Lumen) |
-| Réputation | Kléos : Fait 40 + Écho 30 + Durée 30, non transférable |
-| Prémine | 0 % ; trésorerie communautaire 6,18 % pendant 32 ans |
+| Currency | ATU |
+| Cap | 16,180,339 units (the golden ratio x 10^7) |
+| Emission | 34 eclipses of 4 years, x0.618 per eclipse, exact cap at year 136 |
+| Blocks | every 2 seconds (GHOSTDAG-family BlockDAG) |
+| Economic finality | under 6 seconds (Ring checkpoints, 37 of 55) |
+| Mining | RandomX, CPU only: one computer, one share |
+| Privacy | ring of 16, committed amounts (Pedersen), Tor by default |
+| Disclosure | selective, three levels (Lumen) |
+| Reputation | Kleos: Deed 40 + Echo 30 + Tenure 30, non-transferable |
+| Premine | 0%; community treasury 6.18% for 32 years |
 
-## Le livre blanc
+## The whitepaper
 
-Le document de référence complet est le
-[livre blanc v1.0](docs/livre-blanc/ANTUMBRA-livre-blanc-v1.0.pdf) :
-architecture, cycle de vie d'une transaction avec ses constructions
-cryptographiques, algorithme de réputation et règles correctives,
-économie du nombre d'or, contrats en trois étages, registre des menaces
-et feuille de route de dix-huit mois.
+The complete reference document is the
+[whitepaper v1.1](docs/whitepaper/ANTUMBRA-whitepaper-v1.1.pdf):
+architecture, the full life cycle of a transaction with its
+cryptographic constructions, the reputation algorithm and its
+corrective rules, the golden-ratio economy, three-tier contracts, the
+threat register, and an eighteen-month roadmap. The LaTeX source lives
+next to the PDF and is revised like code.
 
-## Ce que ce dépôt contient
+## What this repository contains
 
 ```
-docs/livre-blanc/   le livre blanc v1.0 (PDF, 30 pages)
-spec/adr/           les décisions d'architecture (ADR 001 à 007)
-simulations/        le simulateur déterministe du noyau social (Kléos)
-code/               le point de départ du nœud (phase 2 de la feuille de route)
+docs/whitepaper/   the whitepaper v1.1 (PDF, 20 pages) and its LaTeX source
+spec/adr/          the architecture decisions (ADR 000 to 007)
+simulations/       the deterministic simulator of the social core (Kleos)
+code/              the starting point of the node (phase 2 of the roadmap)
 ```
 
-La simulation de `simulations/` rejoue seize ans d'histoire du réseau
-avec une ferme de faux profils et une baleine au capital illimité : la
-spécification v2 laissait l'attaquant capturer les 55 sièges de
-l'Anneau ; les règles correctives R1 à R4 ont refermé la fenêtre, et la
-même attaque ne prend plus un seul siège. La simulation est le test de
-régression du noyau social : toute modification des règles doit la
-faire repasser au vert.
+The simulator in `simulations/` replays sixteen years of network
+history with a farm of fake profiles and a whale of unlimited capital:
+the v2 specification let the attacker capture all 55 seats of the
+Ring; the corrective rules R1 to R4 closed the window, and the same
+attack now takes zero seats. That simulation is the regression test of
+the social core: any change to the rules must pass it green again.
 
 ```bash
 cd simulations && python3 kleos.py
-# EXIT OK : toutes les invariants tiennent.
+# EXIT OK: all invariants hold.
 ```
 
-## Statut et feuille de route
+## Status and roadmap
 
-Le projet est en **phase 1 : spécification**. La feuille de route
-complète (dix-huit mois, six phases, critère de sortie binaire à chaque
-étape) est détaillée au chapitre 16 du livre blanc :
+The project is in **phase 1: specification**. The full roadmap
+(eighteen months, six phases, one binary exit criterion per step) is
+detailed in the whitepaper:
 
-1. Spécification et ADR 001 à 007
-2. Prototype BlockDAG CPU sur réseau de développement
-3. Anneau et Kléos v0 (finalité sous 6 secondes)
-4. Identités Braise/Cipher et clés Lumen
-5. Réseau d'essai public
+1. Specification and ADR 000 to 007
+2. CPU BlockDAG prototype on a development network
+3. Ring and Kleos v0 (finality under 6 seconds)
+4. Ember and Cipher identities, Lumen viewing keys
+5. Public test network
 6. Genesis
 
-## Méthode
+## Method
 
-Le code est écrit selon la méthode zéro-faute du livre blanc (chapitre
-15) : double implémentation croisée sur vecteurs d'essai, simulation
-déterministe des règles avant tout code, construction reproductible,
-relecture croisée, audit externe du différenciel, critères GO/NO-GO
-publics. Un NO-GO est un résultat acceptable et publié. Voir
+The code follows the zero-defect method of the whitepaper: cross
+double implementation on test vectors, deterministic simulation of the
+rules before any code, reproducible builds, cross review, external
+audit of the differential, public GO/NO-GO criteria. A NO-GO is an
+acceptable, published result. See
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Le site du projet est [xelisvault.xyz](https://xelisvault.xyz).
+The project website is [xelisvault.xyz](https://xelisvault.xyz).
 
-## Licence
+## License
 
-Le code est publié sous licence MIT. Le livre blanc est publié sous
-licence Creative Commons BY-SA 4.0. La spécification est publique,
-attaquable, et sera révisée comme le code.
+The code is published under the MIT license. The whitepaper is
+published under Creative Commons BY-SA 4.0. The specification is
+public, attackable, and will be revised like code.

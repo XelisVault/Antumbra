@@ -1,45 +1,45 @@
 ==========================================================================
-ANTUMBRA — simulation du noyau social (Kléos / Braise / Anneau)
-moteur déterministe, graine 1618 — 32 ères (16 ans), reproductible
+ANTUMBRA: simulation of the social core (Kleos / Ember / Ring)
+deterministic engine, seed 1618, 32 eras (16 years), reproducible
 ==========================================================================
 
-PASSE 1 · RÈGLES v2 TELLES QUELLES — la spécification est cassée
-  20 parrains complices, 2 parrainages/an, comportement parfait,
-  budget de témoins illimité : profils inscrits 580
-  premier faux profil candidat : année 8.5 (premier honnête : 12.5) — l'attaquant franchit
-  le seuil AVANT le réseau honnête
-  sièges au pire pour l'attaquant : 55/55 (ère 21, année 10)
-  contrôle de la finalité = 28 sièges : ATTEINT — FAILLE CONFIRMÉE
-  cause : l'Écho acheté (2,0/ère) croît plus vite que l'Écho organique ;
-  le seuil 70 est atteignable par Fait+Écho sans aucune Durée.
+PASS 1: V2 RULES AS WRITTEN, the specification is broken
+  20 complicit sponsors, 2 sponsorships/year, perfect behavior,
+  unlimited witness budget: registered profiles 580
+  first fake profile candidate: year 8.5 (first honest: 12.5), the attacker crosses
+  the threshold BEFORE the honest network
+  worst seats held by the attacker: 55/55 (era 21, year 10)
+  finality control = 28 seats: REACHED, FLAW CONFIRMED
+  cause: bought Echo (2.0/era) grows faster than organic Echo;
+  the 70 threshold is reachable by Deed+Echo with zero Tenure.
 
-PASSE 2 · RÈGLES CORRECTIVES R1-R4 — le mur du temps refermé
-  R1 candidature = Kléos >= 70 ET Durée >= 15 ères sans incident
-  R2 témoignage sans poids tant que Fait < 20
-  R3 attestations responsables (fraud convaincue : -3 Fait/témoin)
-  R4 activité mutualisée d'une clique comptée à 25 %
-  croissance honnête : premiers candidats année 12.5, 55 sièges pourvus en fin de course
-  Kléos honnête médian 77.4 · p90 78.5 · « baleine » inactive 30.0 (jamais candidate)
-  Herfindahl des candidats 0.0053 (dispersion saine)
+PASS 2: CORRECTIVE RULES R1-R4, the wall of time closed again
+  R1 candidacy = Kleos >= 70 AND Tenure >= 15 incident-free eras
+  R2 a testimony weighs nothing while Deed < 20
+  R3 liable attestations (convicted fraud: -3 Deed per witness)
+  R4 pooled clique activity counted at 25%
+  honest growth: first candidates year 12.5, 55 seats filled by the end
+  honest median Kleos 77.4, p90 78.5, inactive whale 30.0 (never a candidate)
+  candidate Herfindahl 0.0053 (healthy spread)
 
-  MÊME ATTAQUE MAXIMALE SOUS R1-R4 :
-  profils inscrits : 580 · Kléos médian des faux 11.9 (honnêtes 76.5)
-  faux profils candidats : 0 vs 190 honnêtes
-  sièges au pire pour l'attaquant : 0/55 — aucun, jamais
-  contrôle de la finalité = 28 sièges : JAMAIS APPROCHÉ — le mur tient
-  rappel : tout siège signant un fork est déchu sur-le-champ (Kléos -> 0)
-  Herfindahl final des candidats : 0.0053
+  SAME MAXIMUM ATTACK UNDER R1-R4:
+  registered profiles: 580, fake median Kleos 11.9 (honest 76.5)
+  fake profile candidates: 0 vs 190 honest
+  worst seats held by the attacker: 0/55, none, never
+  finality control = 28 seats: NEVER APPROACHED, the wall holds
+  reminder: any seat signing a fork is stripped on the spot (Kleos -> 0)
+  final candidate Herfindahl: 0.0053
 
-S2 · ACHAT DE TÉMOINS POUR GONFLER L'ÉCHO — arithmétique
-  300 témoins établis, SANS plafond par cible : gain 30 pts/ère => Écho 30 en 1.0 ère — FAILLE
-  avec le plafond 2,0/cible/ère : Écho 30 en >= 15.4 ères (7.7 ans) d'achat continu
-  avec R2 : les témoins frais (Fait < 20) ne pèsent RIEN ; louer des
-  témoins établis expose chacun à -3 Fait par cible convaincue (R3)
-  => payer 300 témoins ne donne pas plus qu'en payer 20, et le
-     prix par point monte jusqu'à l'absurde : le mur du temps tient
+S2: BUYING WITNESSES TO INFLATE THE ECHO, arithmetic
+  300 established witnesses, WITHOUT a per-target cap: gain 30 pts/era => Echo 30 in 1.0 era, FLAW
+  with the 2.0/target/era cap: Echo 30 in >= 15.4 eras (7.7 years) of continuous buying
+  with R2: fresh witnesses (Deed < 20) weigh NOTHING; renting
+  established witnesses exposes each to -3 Deed per convicted target (R3)
+  => paying 300 witnesses gives no more than paying 20, and the
+     price per point climbs into absurdity: the wall of time holds
 
-INVARIANTS VÉRIFIÉS À CHAQUE ÈRE (assertions, 3 passes x 32 ères) :
-  Kléos dans [0,100] · Fait<=40 · Écho<=30 · Durée<=30
-  gain d'Écho par cible <= 2,0 · sièges = 55 ou moins si pénurie
-  parrainage <= 2/an/parrain · « baleine » jamais candidate
-  sous R1 : tout candidat a Durée >= 15 et Durée vivante : OK
+INVARIANTS VERIFIED AT EVERY ERA (assertions, 3 passes x 32 eras):
+  Kleos within [0,100], Deed<=40, Echo<=30, Tenure<=30
+  Echo gain per target <= 2.0, seats = 55 or fewer if scarce
+  sponsorship <= 2/year/sponsor, whale never a candidate
+  under R1: every candidate has Tenure >= 15 and a living Tenure: OK

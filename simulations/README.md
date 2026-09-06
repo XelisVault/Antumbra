@@ -1,49 +1,49 @@
-# Simulations ANTUMBRA
+# ANTUMBRA simulations
 
-Chaque règle sociale ou économique du protocole est simulée avant
-d'être codée. Les simulations sont déterministes : graine fixe,
-invariants numériques, attaques maximales rejouées. Ce sont les tests
-de régression de la spécification.
+Every social or economic rule of the protocol is simulated before it
+is coded. The simulations are deterministic: fixed seed, numeric
+invariants, maximum attacks replayed. They are the regression tests
+of the specification.
 
-## kleos.py : le noyau social
+## kleos.py: the social core
 
-Rejoue seize ans d'histoire du réseau (32 ères, graine 1618) avec trois
-populations : le réseau honnête, une ferme de vingt faux profils
-parrains complices (deux parrainages par an chacun, budget de témoins
-illimité), et une baleine au capital illimité mais inactive.
+Replays sixteen years of network history (32 eras, seed 1618) with
+three populations: the honest network, a farm of twenty fake profiles
+with complicit sponsors (two sponsorships per year each, unlimited
+witness budget), and a whale with unlimited capital that stays
+inactive.
 
 ```bash
 python3 kleos.py
-# EXIT OK : toutes les invariants tiennent.
+# EXIT OK: all invariants hold.
 ```
 
-Sorties : `kleos-sim-report.txt` (le rapport complet) et
-`antumbra-kleos-curves.png` (les trajectoires de score). Dépendance :
-matplotlib, et une police couvrant le français.
+Outputs: `kleos-sim-report.txt` (the full report) and
+`antumbra-kleos-curves.png` (the score trajectories). Dependency:
+matplotlib, and a font covering the Latin-1 range.
 
-Historique : la première passe, avec les règles de la spécification v2,
-montrait la ferme de faux profils franchir le seuil de candidature à
-l'Anneau avant le réseau honnête et capturer les 55 sièges à l'année
-10. Les règles correctives R1 à R4 (seuil de candidature, poids des
-témoins, responsabilité des attestations, décote de l'activité
-mutualisée) ont refermé la fenêtre : la même attaque ne prend plus un
-seul siège, et le Kléos médian des faux profils plafonne à 11,9 contre
-76,5 pour les honnêtes. La baleine, elle, plafonne à 30 dans les deux
-mondes : le capital ne multiplie rien.
+History: the first pass, with the rules of the v2 specification,
+showed the fake-profile farm crossing the Ring candidacy threshold
+before the honest network and capturing all 55 seats at year 10. The
+corrective rules R1 to R4 (candidacy threshold, witness weight,
+attestation liability, clique-activity discount) closed the window:
+the same attack now takes zero seats, and the median Kleos of the fake
+profiles plateaus at 11.9 against 76.5 for the honest network. The
+whale plateaus at 30 in both worlds: capital multiplies nothing.
 
-Toute modification des règles du Kléos doit repasser cette simulation
-au vert, attaques maximales comprises, avant d'être proposée en
-décision d'architecture.
+Any change to the Kleos rules must pass this simulation green again,
+maximum attacks included, before being proposed as an architecture
+decision.
 
-## emission.py : le calendrier des éclipses dorées
+## emission.py: the golden eclipse calendar
 
-Vérifie le contrat monétaire : plafond de 16 180 339 ATU, première
-éclipse de 6 180 340, deuxième de 3 819 660 (dix millions exactement
-après huit ans), série géométrique de raison 1/phi, cap exact à la
-trente-quatrième éclipse en l'an 136, trésorerie de 6,18 % sur les
-huit premières éclipses.
+Verifies the monetary contract: a cap of 16,180,339 ATU, a first
+eclipse of 6,180,340, a second of 3,819,660 (exactly ten million after
+eight years), a geometric series of ratio 1/phi, the exact cap at the
+thirty-fourth eclipse in year 136, and a treasury of 6.18% over the
+first eight eclipses.
 
 ```bash
 python3 emission.py
-# total exact = 16 180 339 == cap : True
+# exact total = 16,180,339 == cap: True
 ```

@@ -1,0 +1,87 @@
+% ANTUMBRA whitepaper, English edition.
+% Bitcoin-style layout: no cover page, title block on page 1, abstract,
+% contents, then numbered sections. Black and white only.
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{newtxtext,newtxmath}
+\usepackage{geometry}
+\geometry{a4paper, top=2.6cm, bottom=2.6cm, left=2.5cm, right=2.5cm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{microtype}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[hidelinks,bookmarks=true,bookmarksnumbered=true,unicode=true]{hyperref}
+
+% typography discipline
+\widowpenalty=10000
+\clubpenalty=10000
+\setlength{\parskip}{2.5pt plus 1pt}
+
+% section spacing, plain and quiet
+\titleformat{\section}{\large\bfseries}{\thesection}{0.7em}{}
+\titlespacing*{\section}{0pt}{14pt plus 4pt minus 2pt}{6pt}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{10pt plus 3pt minus 2pt}{4pt}
+
+\hypersetup{
+  pdftitle={ANTUMBRA: A Reputation-Anchored Settlement Network for the Human-Machine Economy},
+  pdfauthor={XelisVault},
+  pdfsubject={Blockchain protocol specification},
+  pdfkeywords={ANTUMBRA, ATU, blockchain, privacy, reputation, BlockDAG, RandomX, CryptoNote}
+}
+
+\begin{document}
+
+% ── title block, in the manner of a classical whitepaper ──
+\begin{center}
+  {\LARGE\bfseries ANTUMBRA}\\[9pt]
+  {\large A Reputation-Anchored Settlement Network\\for the Human-Machine Economy}\\[9pt]
+  {\normalsize XelisVault}\\[2pt]
+  {\small\ttfamily xelisvault.xyz \; $\cdot$ \; github.com/XelisVault/Antumbra}\\[2pt]
+  {\small Version 1.1, September 2026}
+\end{center}
+
+\vspace{10pt}
+
+\begin{abstract}
+\noindent
+ANTUMBRA is a settlement network built for a problem that no existing chain
+treats as a protocol primitive: verifiable trust between humans and machines.
+Millions of software agents already buy, sell and pay on behalf of people,
+over rails built on fully transparent stablecoins; those rails say nothing
+about whether an agent is reliable, who answers for it, or where its budget
+ends. Dominant proofs of humanity engrave body data into global registries,
+and the coins that are actually private remain slow or unreadable to
+regulators. ANTUMBRA occupies that empty square. It couples a CPU-mined
+BlockDAG with two-second blocks and private-by-default transactions, a
+finality committee of fifty-five seats drawn by reputation rather than
+capital, non-biometric human identities, agents that are accountable by
+construction, and a native three-level disclosure mechanism. The scarce
+resource the network mints is consensus reputation, Kleos: three layers of
+which the heaviest is time itself, which cannot be bought. The money supply
+is capped at 16,180,339 ATU, the golden ratio scaled by ten million, issued
+over thirty-four four-year eclipses and closed exactly at year 136. The
+specification was attacked by its own deterministic simulation before being
+written down as final: one flaw was found and four corrective rules closed
+it. This document is the public reference specification for the network.
+\end{abstract}
+
+\vspace{4pt}
+\tableofcontents
+\vspace{4pt}
+
+\input{sec-intro}
+\input{sec-tx}
+\input{sec-identity}
+\input{sec-gov}
+\input{sec-close}
+
+\end{document}

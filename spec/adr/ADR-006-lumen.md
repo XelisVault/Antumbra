@@ -1,26 +1,25 @@
-# ADR-006 : Lumen, la divulgation sélective à trois niveaux
+# ADR-006: Lumen, selective disclosure on three levels
 
-Statut : **Proposé**
+Status: **Proposed**
 
-## Contexte
+## Context
 
-La confidentialité par défaut rend le réseau illisible pour les
-comptables et les autorités, à moins que la divulgation ne soit une
-primitive du protocole plutôt qu'une promesse. C'est la leçon de
-Zcash : la lisibilité, pas la transparence, est le critère
-d'acceptation.
+Privacy by default makes the network unreadable for accountants and
+authorities unless disclosure is a protocol primitive rather than a
+promise. That is the lesson of Zcash: readability, not transparency,
+is the acceptance criterion.
 
-## Décision
+## Decision
 
-Trois niveaux, tous à l'initiative du propriétaire : clé de vue par
-transaction (prouver un paiement précis à son destinataire), clé
-d'auditeur bornée dans le temps et le périmètre, preuve de conformité
-non interactive établissant un fait (montant sous plafond, ancienneté
-des fonds, couverture d'un engagement) sans rien révéler d'autre. Les
-preuves de conformité de phase 4 s'appuient sur Groth16, héritage
-revendiqué du projet qui a inspiré la couche d'agents.
+Three levels, all initiated by the owner: a per-transaction viewing
+key (proving one precise payment to its recipient), an auditor key
+bounded in time and scope, and a non-interactive compliance proof
+establishing a fact (amount under a ceiling, age of funds, coverage of
+an engagement) without revealing anything else. The phase 4 compliance
+proofs build on Groth16, the claimed heritage of the project that
+inspired the agent layer.
 
-## Validation exigée
+## Required validation
 
-Spécification cryptographique relue par un auditeur externe en phase 4,
-et démonstrateurs de preuve vérifiés sur vecteurs d'essai publiés.
+Cryptographic specification reviewed by an external auditor in phase
+4, and proof demonstrators verified on published test vectors.

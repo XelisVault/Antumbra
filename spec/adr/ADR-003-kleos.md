@@ -1,27 +1,27 @@
-# ADR-003 : Kléos, la réputation à trois couches
+# ADR-003: Kleos, the three-layer reputation
 
-Statut : **Proposé** (validé par simulation)
+Status: **Proposed** (validated by simulation)
 
-## Contexte
+## Context
 
-La réputation doit être assez solide pour porter la finalité, et assez
-sobre pour ne pas devenir une monnaie. Le projet qui a inspiré cette
-partie indexait la réputation sur le capital : la formule multipliait
-les deux, et le riche restait au pouvoir.
+Reputation must be strong enough to carry finality, and sober enough
+never to become a currency. The project that inspired this part
+indexed reputation on capital: the formula multiplied the two, and
+the rich stayed in power.
 
-## Décision
+## Decision
 
-Score de 0 à 100, consensuel, non transférable : le Fait (comportement
-observé, plafond 40), l'Écho (attestations des pairs, plafond 30, budget
-de 0,1 par témoin et par ère), la Durée (ancienneté continue, plafond
-30). Décroissances naturelles ; triche : remise à zéro du Fait ; incident
-majeur : effondrement de la Durée. Quatre règles correctives issues de
-la simulation : R1 seuil de candidature à 70 et quinze ères, R2 témoin
-muet sous vingt points de Fait, R3 attestations responsables, R4 activité
-mutualisée d'une clique comptée au quart.
+A score from 0 to 100, consensus-computed, non-transferable: the Deed
+(observed behavior, cap 40), the Echo (peer attestations, cap 30,
+budget of 0.1 per witness per era), the Tenure (continuous seniority,
+cap 30). Natural decay; cheating: the Deed resets to zero; major
+incident: the Tenure collapses. Four corrective rules derived from the
+simulation: R1 candidacy threshold at 70 and fifteen eras, R2 a
+witness stays mute below twenty points of Deed, R3 liable attestations,
+R4 pooled clique activity counted at one quarter.
 
-## Validation exigée
+## Required validation
 
-La simulation déterministe (graine 1618) est le test de régression :
-toute modification des règles doit la repasser au vert, attaques
-maximales comprises.
+The deterministic simulation (seed 1618) is the regression test: any
+modification of the rules must pass it green again, maximum attacks
+included.

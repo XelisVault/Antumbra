@@ -1,31 +1,31 @@
-# ADR-001 : couche d'ordre, un BlockDAG à convergence rapide
+# ADR-001: ordering layer, a fast-converging BlockDAG
 
-Statut : **Proposé**
+Status: **Proposed**
 
-## Contexte
+## Context
 
-La cadence visée est de deux secondes par bloc. Une chaîne linéaire à
-preuve de travail perdrait à cette cadence une part insoutenable de ses
-blocs en orphelins ; la confidentialité par anneau exige par ailleurs
-que les sorties non dépensées soient nombreuses et bien distribuées.
+The target cadence is two seconds per block. A linear
+proof-of-work chain would lose an unsustainable share of its blocks to
+orphans at that cadence; ring privacy also requires unspent outputs
+to be numerous and well distributed.
 
-## Décision
+## Decision
 
-La couche d'ordre est un DAG de blocs à convergence rapide, de famille
-GHOSTDAG : les blocs parallèles sont ordonnés par règle de consensus au
-lieu d'être rejetés, et la sécurité cumulée croît avec le volume total
-de blocs. L'élagage conserve l'état récent et les preuves du passé pour
-qu'un nœud complet tienne sur un ordinateur personnel.
+The ordering layer is a fast-converging block DAG of the GHOSTDAG
+family: parallel blocks are ordered by consensus rule instead of being
+rejected, and cumulative security grows with the total volume of
+blocks. Pruning keeps the recent state and the proofs of the past so
+that a full node fits on a personal computer.
 
-## Options écartées
+## Discarded options
 
-Chaîne linéaire à blocs courts (taux d'orphelins rédhibitoire) ;
-chaîne à cadence longue (confirmation trop lente pour le comptoir) ;
-consensus à comité pour la production de blocs (verrou de capital,
-contraire au principe égalitariste).
+A linear chain with short blocks (prohibitive orphan rate); a chain
+with a long cadence (confirmation too slow for the counter); committee
+consensus for block production (capital lock, contrary to the
+egalitarian principle).
 
-## Validation exigée
+## Required validation
 
-Prototype isolé minant un DAG processeur à deux secondes, puis
-vingt-quatre heures de réseau de développement sans réorganisation
-non anticipée (phase 2 de la feuille de route).
+An isolated prototype mining a CPU DAG at two seconds, then
+twenty-four hours of development network without unexpected
+reorganization (phase 2 of the roadmap).

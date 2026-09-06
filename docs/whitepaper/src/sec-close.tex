@@ -1,0 +1,195 @@
+% Sections 13 to 15, plus references.
+
+\section{Threat Model: The Honest Register}\label{sec:threats}
+
+A whitepaper that does not list its risks is a sales document; this one
+is not. The threats are ranked by severity, with their mitigations and,
+because a mitigated risk is not a vanished risk, their residual status
+stated in plain words. That discipline is not decorative: the previous
+sections showed that a social specification judged solid could fall
+before its own simulation; the present section applies the same
+requirement to the whole assembly, before an external audit takes it
+over again, phase by phase, on the roadmap of Section~\ref{sec:roadmap}.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Threat register: mitigations and residual status.}
+\label{tab:threats}
+\begin{tabularx}{\textwidth}{@{}L{3.4cm}L{1.5cm}YY@{}}
+\toprule
+Threat & Severity & Mitigation & Residual status \\
+\midrule
+mining reorganization (majority attack) & high & Ring checkpoints: everything signed is immutable; the attack only prospers on the six-second window & reduced; double spending remains possible on the unsigned window \\
+Ring collusion (55 seats) & high & weighted draw over a large population, rotation each era, total stripping on the first signed fork & low in steady regime; real during the first eras \\
+massive reputation purchase & high & the Tenure layer is not monetizable; Echo is capped and weighted; concentration index monitored; rules R1 to R4 & structurally blocked by time; the assumed wall \\
+false humanities (sybil on Embers) & medium & sponsorship capped at two per year, sponsor Kleos at stake, presence proof each era & depends on the size of the established web; the first years are the most exposed \\
+regulatory frame (MiCA, Travel Rule) & high & the Lumen: provable disclosure, native data minimization; payment-currency strategy & structural, not eliminable; readability is the maximum reachable \\
+strict-cap failure (long-term security) & medium & payment volume as the fee resource; public security budget tracking; constitutional tail safety valve & the assumed wager of the symbolic contract \\
+biometric debt & none & no body data collected, anywhere, ever & none; nothing to leak \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two threats deserve development. Ring collusion first: it is the price
+of the finality assembly, and its remedy is not technical but
+demographic. The larger the high-reputation population, the more buying a
+majority of seats requires buying years of irreproachability from people
+who have no reason to sell: the network must therefore cultivate its
+reputation class as a common good, from the first eras onward; that is a
+policy, not a function. The regulatory risk next: the worst strategy
+would be discretion, hiding attracts suspicion, being readable invites
+expertise. The documentation of the Lumen, the compliance proofs and the
+data-minimization argument are designed to be shown, not endured: the
+transparency of the mechanism is the best defense of the opacity of the
+data.
+
+\section{The Zero-Defect Method}\label{sec:method}
+
+The question that closes every conversation about this project is the
+right one: will you be able to code all of that without a single fault?
+The honest answer begins with an admission: nobody can promise it, and
+whoever promises it is selling something. Bitcoin itself, the most
+scrutinized implementation in the world, nearly failed twice. An integer
+overflow created one hundred eighty-four billion bitcoins in one
+transaction in 2010, spotted within hours, chain replayed by hand; the
+2018 vulnerability would have allowed minting infinite bitcoins, found
+by a volunteer auditor, cold, on code examined for ten years. The
+CryptoNote base had its own episode in 2017: a flaw in key images
+allowed double spending on every chain of the family. The right question
+is therefore not whether the fault is possible, it always is; it is
+which method catches faults before attackers do.
+
+\subsection{Two captured specimens}
+
+First specimen, lived on XelisVault on September 5, 2026. The paper
+wallet generated a twenty-five word mnemonic seed; imported into the
+official NERVA wallet, it restored an address different from the printed
+one. The code looked right, re-read twice, and that is precisely the
+trap: the bug lived in a reading convention, invisible to re-reading.
+The C++ reference groups the seed into four-byte words and writes them
+in little-endian order; our TypeScript mirror read them in the opposite
+order. The fix was made the way it must always be made: port the
+reference line by line, generate forty-eight test vectors, require bit
+to bit identity of the two implementations, then re-run the audit. The
+lesson exceeds the case: an encoding fault is not found, it is crossed;
+only a second implementation, executed in parallel on the same inputs,
+reveals it mechanically.
+
+Second specimen, deeper, since it concerns the design itself and not one
+line of code: the Kleos simulation attack, told in
+Section~\ref{sec:kleos}. A farm of fake profiles crossed the candidacy
+threshold for the Ring before the honest network and captured the
+fifty-five seats; four corrective rules closed the window, and the same
+attack replayed takes no seat. The decisive point is not that the flaw
+was found: it is that it was found by a three-hundred-line simulation,
+before any chain code, at a cost in hours of computation and not in
+years of reputation. The deterministic simulation of a specification is
+the cheapest machine there is for catching design faults; every new rule
+of the protocol will be treated that way before implementation, with a
+fixed seed, numeric invariants and a regression run over three attack
+sets.
+
+\subsection{The six-layer verification protocol}
+
+Those two specimens define the method better than a treatise would; it
+fits in six layers, each extinguishing an entire class of faults rather
+than one particular bug. A bug of an extinguished class does not come
+back; a fixed bug always comes back. First layer: cross double
+implementation on test vectors, which reveals encoding and convention
+faults. Second layer: deterministic simulation of the social and
+economic rules before any code, which reveals design flaws. Third layer:
+reproducible builds and continuous massive random testing, which reveal
+non-determinisms and unexpected states. Fourth layer: systematic
+cross-review between the project holder and his assistant, two pairs of
+eyes, two reading conventions. Fifth layer: external audit of the
+differential at every phase, because a fresh auditor does not have the
+author's blind spots. Sixth layer: measurable GO and NO-GO exit criteria
+at every roadmap phase, with the rule that a NO-GO remains an acceptable,
+published result.
+
+The implementation discipline adds to the six layers: never a main
+network on release-candidate foundations; multi-platform distribution
+from day one, five signed targets; refusal of unaudited exotic
+cryptographic primitives, stated since the first version of this
+specification and held since; publication of all code from the
+specification phase onward, because hidden code is code nobody has
+looked at. The method does not promise perfection; it promises the
+shortest possible reaction time between the appearance of a fault and
+its capture, and that is the only promise an honest engineer can make.
+
+\section{Roadmap and Conclusion}\label{sec:roadmap}
+
+The calendar is realistic because it is sized for a small team, not for
+a foundation. The base is an assembly of proven foundations, the
+CryptoNote lineage for the private sphere and the public literature of
+fast-converging DAGs for the ordering layer; everything that is new,
+Kleos, the Ring, the Lumen, Cipher perimeters, Mandates, is
+deterministic, testable, auditable code, with no exotic primitive. Every
+phase carries one measurable deliverable and one binary exit criterion;
+an unmet criterion is not a shameful failure, it is steering data, and
+the phase replays until it is met.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Eighteen months, six phases, one binary exit criterion at every
+step.}
+\label{tab:roadmap}
+\begin{tabularx}{\textwidth}{@{}L{2.9cm}L{1.4cm}YY@{}}
+\toprule
+Phase & Months & Measurable deliverables & Exit criterion \\
+\midrule
+1, specification & M1-M2 & written protocol, numbered architecture decisions, format sketches, extended social-core simulation & specification read by two external readers \\
+2, DAG prototype & M3-M5 & dev network mining a CPU DAG at two seconds, stem propagation & twenty-four hours without unexpected reorganization \\
+3, Ring and Kleos v0 & M6-M8 & signed checkpoints, Deed score computed, era rotation replayed & finality under six seconds over one hundred thousand replayed blocks \\
+4, identities and Lumen & M9-M12 & Embers with sponsorship, Ciphers with perimeters, bounded viewing keys, external audit of the differential & audit without a critical flaw \\
+5, public test network & M13-M15 & faucet, explorer, one hundred nodes, agent load simulator, upgrade ritual repeated three times & three consecutive upgrades without incident \\
+6, genesis & M16-M18 & public ceremony, signed executables for five platforms, Lumen documentation for authorities published & all previous criteria, without exception \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Three ecosystem commitments accompany the calendar. The code is public
+from the specification phase onward, and this whitepaper lives next to
+it in the same repository, revised like code. The XelisVault ecosystem,
+register, tickets, paper wallet, becomes multi-chain at phase five: a
+feature flag, not a rewrite, NERVA first, ANTUMBRA after. Finally, the
+project identities, domain, repositories, social networks, are reserved
+before phase two, so that nothing lends itself to confusion on genesis
+day. The roadmap reads as a promise of operational humility: eighteen
+months of measured work, every step verifiable by a third party, and
+none of it depending on a miracle of cryptography.
+
+A faithfully kept shadow, a ring of light anyone can verify on demand:
+privacy as a right, proof as a courtesy, and time as the only justice
+of the peace that money cannot corrupt.
+
+Such is the public specification of the ANTUMBRA network. The demand of
+2026 is real and measurable: agents that pay, bots to distinguish from
+persons, authorities to whom one shows proofs rather than promises,
+users who want the instant. The answer fits one image, the one that
+gives the network its name: the antumbra, the zone of the annular
+eclipse where a source too small to be hidden lets a ring of light show
+around the shadow. The core of the network is that shadow, balances,
+identities, flows, kept by construction; around it, the ring of
+verification, reputation, finality, compliance proofs, which anyone can
+switch on without exposing anyone other than oneself. The specification
+was written to be attacked before being implemented, and that is the
+only honest way to write a whitepaper. To work.
+
+\section*{References}
+\addcontentsline{toc}{section}{References}
+\begin{enumerate}[leftmargin=1.6em, itemsep=1.5pt, topsep=4pt]
+\item S. Nakamoto. \emph{Bitcoin: A Peer-to-Peer Electronic Cash System}. bitcoin.org, 2008.
+\item N. van Saberhagen. \emph{CryptoNote v 2.0}. 2013.
+\item tevador et al. \emph{RandomX Proof of Work}. randomx.io, 2019.
+\item Y. Sompolinsky, S. Wyborski, Y. Zohar. \emph{PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus}. 2021.
+\item B. B\"unz, S. Agrawal, S. Boneh, M. Weston. \emph{Bulletproofs: Short Proofs for Confidential Transactions and More}. IEEE S\&P, 2018.
+\item S. B. Venkatakrishnan, G. Fanti, M. Zhou, K. Cai, P. Viswanath et al. \emph{Dandelion++: Lightweight Cryptocurrency Networking with Formal Anonymity Guarantees}. ACM ToMPECS, 2018.
+\item T. Pedersen. \emph{Non-Interactive and Information-Theoretic Secure Verifiable Secret Sharing}. EUROCRYPT, 1991.
+\item M. Castro, B. Liskov. \emph{Practical Byzantine Fault Tolerance}. OSDI, 1999.
+\item D. Hopwood et al. \emph{Zcash Protocol Specification}. zips.z.cash, ongoing.
+\item Regulation (EU) 2016/679 (General Data Protection Regulation), Article 5(1)(c), data minimization.
+\item Regulation (EU) 2023/1114 (Markets in Crypto-Assets, MiCA).
+\end{enumerate}

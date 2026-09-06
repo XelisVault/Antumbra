@@ -1,34 +1,33 @@
-# Le code du nœud ANTUMBRA
+# The ANTUMBRA node code
 
-Ce répertoire accueillera l'implémentation du nœud complet, à partir de
-la phase 2 de la feuille de route. Le socle est un assemblage de
-fondations éprouvées : la lignée CryptoNote pour la sphère privée
-(adresses à usage unique, engagements Pedersen, signatures en anneau,
-Bulletproofs), la littérature GHOSTDAG pour la couche d'ordre, RandomX
-pour le minage processeur. Rien d'exotique : la nouveauté du projet est
-dans les règles (Kléos, Braise, Cipher, Lumen, Mandats), pas dans les
-primitives.
+This directory will host the full node implementation, starting at
+phase 2 of the roadmap. The base is an assembly of proven foundations:
+the CryptoNote lineage for the private sphere (one-time addresses,
+Pedersen commitments, ring signatures, Bulletproofs), the GHOSTDAG
+literature for the ordering layer, RandomX for CPU mining. Nothing
+exotic: the novelty of the project is in the rules (Kleos, Ember,
+Cipher, Lumen, Mandates), not in the primitives.
 
-## Structure prévue
+## Planned structure
 
 ```
 code/
-  node/          le nœud complet : DAG, validation, propagation, RPC
-  voile/         transactions privées : anneau 16, engagements, nullifiants
-  anneau/        checkpoints signés, quorum 37/55, rotation d'ères
-  kleos/         score de réputation à trois couches et règles R1 à R4
-  identites/     Braise (parrainage, présence) et Cipher (périmètres)
-  lumen/         clés de vue bornées et preuves de conformité
-  mandats/       sorties à prédicat : séquestre, versements, plafonds
+  node/          the full node: DAG, validation, propagation, RPC
+  veil/          private transactions: ring 16, commitments, nullifiers
+  ring/          signed checkpoints, quorum 37/55, era rotation
+  kleos/         the three-layer reputation score and rules R1 to R4
+  identities/    Ember (sponsorship, presence) and Cipher (perimeters)
+  lumen/         bounded viewing keys and compliance proofs
+  mandates/      predicate outputs: escrow, scheduled payments, caps
 ```
 
-Chaque répertoire naîtra avec son jeu de vecteurs d'essai et sa
-référence de croisement, conformément à la méthode du CONTRIBUTING.md :
-la double implémentation précède toujours l'assemblage.
+Every directory will be born with its test vectors and its crossing
+reference, following the method of CONTRIBUTING.md: double
+implementation always precedes assembly.
 
-## Point de départ de la phase 2
+## The phase 2 starting point
 
-Le premier jalon est un réseau de développement minant un DAG
-processeur à deux secondes, avec propagation en tige Dandelion++,
-tenant vingt-quatre heures sans réorganisation non anticipée. Tout ce
-qui précède ce jalon est de la spécification, pas du code.
+The first milestone is a development network mining a CPU DAG at two
+seconds, with Dandelion++ stem propagation, holding twenty-four hours
+without unexpected reorganization. Everything before that milestone is
+specification, not code.

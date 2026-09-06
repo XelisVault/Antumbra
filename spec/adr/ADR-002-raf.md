@@ -1,26 +1,26 @@
-# ADR-002 : finalité, l'Anneau ancré sur la réputation (RAF)
+# ADR-002: finality, the Ring anchored on reputation (RAF)
 
-Statut : **Proposé**
+Status: **Proposed**
 
-## Contexte
+## Context
 
-L'inclusion en deux secondes ne suffit pas : le paiement doit devenir
-irréversible en secondes. Les consensus à comité classiques l'obtiennent
-en verrouillant du capital, ce qui revient à vendre la finalité.
+Two-second inclusion is not enough: the payment must become
+irreversible in seconds. Classical committee consensus obtains that
+by locking capital, which amounts to selling finality.
 
-## Décision
+## Decision
 
-Un comité de cinquante-cinq sièges, tirés à chaque ère parmi les
-identités à Kléos d'au moins 70 et à la Durée d'au moins quinze ères,
-signe des points de contrôle toutes les quatre secondes ; le quorum de
-trente-sept signatures finalise tout ce que le point de contrôle couvre.
-Un siège qui signe un fork concurrent est déchu : son Kléos est remis à
-zéro. En cas de silence du tiers des sièges, la finalité retombe sur la
-profondeur de preuve de travail (dix blocs, vingt secondes) et l'ère
-suivante retire les silencieux. Aucun capital n'est verrouillé, aucun
-rendement n'est servi : ce n'est pas une preuve d'enjeu.
+A committee of fifty-five seats, drawn each era among identities with
+Kleos of at least 70 and Tenure of at least fifteen eras, signs
+checkpoints every four seconds; the quorum of thirty-seven signatures
+finalizes everything the checkpoint covers. A seat that signs a
+competing fork is stripped: its Kleos is reset to zero. Should a third
+of the seats fall silent, finality falls back on proof-of-work depth
+(ten blocks, twenty seconds) and the next era removes the silent
+seats. No capital is locked, no yield is paid: this is not proof of
+stake.
 
-## Validation exigée
+## Required validation
 
-Finalité mesurée sous six secondes sur cent mille blocs rejoués en
-phase 3, avec injection de pannes et de sièges silencieux.
+Finality measured under six seconds over one hundred thousand replayed
+blocks in phase 3, with injected failures and silent seats.

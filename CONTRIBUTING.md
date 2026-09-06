@@ -1,52 +1,49 @@
-# Contribuer à ANTUMBRA
+# Contributing to ANTUMBRA
 
-Ce projet code une monnaie : une faute peut coûter de l'argent à des
-inconnus. La barre est donc plus haute que dans un projet applicatif
-ordinaire, et la méthode qui suit n'est pas négociable. Elle est
-détaillée au chapitre 15 du livre blanc ; ce document en est la version
-exécutable.
+This project codes money: one fault can cost strangers real funds.
+The bar is therefore higher than in an ordinary application project,
+and the method below is not negotiable. It is detailed in the
+whitepaper; this document is its executable version.
 
-## Les six couches de vérification
+## The six verification layers
 
-1. **Double implémentation croisée.** Toute routine d'encodage, de
-   sérialisation ou de cryptographie est portée deux fois, à partir de
-   la référence (C++, Rust, spécification), et les deux
-   implémentations doivent produire des résultats identiques bit à bit
-   sur un jeu de vecteurs d'essai généré et archivé. Une faute de
-   convention ne se trouve pas à la relecture : elle se croise.
-2. **Simulation déterministe avant code.** Toute règle sociale ou
-   économique (Kléos, parrainages, tirage de l'Anneau, émission) est
-   d'abord simulée : graine fixe, invariants numériques, attaque
-   maximale rejouée. Voir `simulations/kleos.py`, qui a révélé et corrigé
-   la faille de la spécification v2.
-3. **Construction reproductible et tests aléatoires.** Les exécutables
-   se construisent de manière déterministe ; les états aléatoires
-   massifs sont rejoués en continu sur le réseau de développement.
-4. **Relecture croisée.** Chaque fusion est relue par une seconde
-   personne (humaine ou assistée), avec un compte rendu archivé.
-5. **Audit externe du différenciel.** Aux phases 4 et 6 de la feuille
-   de route, un auditeur externe relit le différenciel complet depuis
-   la phase précédente.
-6. **Critères GO/NO-GO publics.** Chaque phase de la feuille de route
-   a un critère de sortie mesurable ; un critère non atteint bloque la
-   phase suivante et le NO-GO est publié.
+1. **Cross double implementation.** Every encoding, serialization or
+   cryptography routine is ported twice, from the reference (C++, Rust,
+   specification), and both implementations must produce bit to bit
+   identical results over a generated and archived set of test vectors.
+   A convention fault is not found by re-reading: it is crossed.
+2. **Deterministic simulation before code.** Every social or economic
+   rule (Kleos, sponsorships, the Ring draw, emission) is simulated
+   first: fixed seed, numeric invariants, maximum attack replayed. See
+   `simulations/kleos.py`, which revealed and fixed the flaw of the v2
+   specification.
+3. **Reproducible builds and random testing.** Executables build
+   deterministically; massive random states are replayed continuously
+   on the development network.
+4. **Cross review.** Every merge is reviewed by a second person (human
+   or assisted), with an archived report.
+5. **External audit of the differential.** At phases 4 and 6 of the
+   roadmap, an external auditor re-reads the complete differential
+   since the previous phase.
+6. **Public GO/NO-GO criteria.** Every roadmap phase has one measurable
+   exit criterion; an unmet criterion blocks the next phase, and the
+   NO-GO is published.
 
-## Règles d'hygiène
+## Hygiene rules
 
-- Jamais de code en version candidate sur une branche de release ; le
-  réseau principal ne tourne que sur des fondations stables et auditées.
-- Aucune primitive cryptographique exotique non auditée : on compose
-  des primitives éprouvées, on n'en invente pas.
-- Chaque changement de comportement du consensus passe par une
-  décision d'architecture (`spec/adr/`) avant la moindre ligne de code.
-- Le format des messages de commit reste factuel : ce qui a changé,
-  pourquoi, et quel test le prouve.
-- Les vecteurs d'essai générés sont archivés : ils sont la mémoire des
-  fautes déjà capturées.
+- Never release-candidate code on a release branch; the main network
+  runs only on stable, audited foundations.
+- No unaudited exotic cryptographic primitive: we compose proven
+  primitives, we do not invent them.
+- Every consensus behavior change goes through an architecture decision
+  (`spec/adr/`) before a single line of code.
+- Commit messages stay factual: what changed, why, and which test
+  proves it.
+- Generated test vectors are archived: they are the memory of faults
+  already caught.
 
-## Signaler une faille
+## Reporting a flaw
 
-Une faille découverte se signale en privé via les signalements de
-sécurité GitHub (Security advisories), avec un délai de divulgation
-responsable de 90 jours. Les failles confirmées sont créditées dans le
-registre public une fois corrigées.
+A discovered flaw is reported privately through GitHub security
+advisories, with a 90-day responsible disclosure window. Confirmed
+flaws are credited in the public register once fixed.

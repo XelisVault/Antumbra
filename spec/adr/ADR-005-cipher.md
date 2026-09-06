@@ -1,23 +1,22 @@
-# ADR-005 : Cipher, l'agent responsable par construction
+# ADR-005: Cipher, the agent accountable by construction
 
-Statut : **Proposé**
+Status: **Proposed**
 
-## Contexte
+## Context
 
-Les rails de paiement agentiques de 2026 transportent des paiements
-machine-à-machine sans dire qui respond de l'agent ni jusqu'où il peut
-dépenser.
+The agent payment rails of 2026 transport machine-to-machine payments
+without saying who answers for the agent or how far it may spend.
 
-## Décision
+## Decision
 
-Tout agent s'enregistre avec trois attaches : un parrain humain (une
-Braise, responsable et révocateur), un périmètre de dépense déclaratif
-et vérifiable à chaque transaction (plafonds, destinataires, marqueurs
-d'usage, fenêtre de validité), et un interrupteur de révocation à une
-transaction. Le Kléos d'agent construit son actif commercial.
+Every agent registers with three bindings: a human sponsor (an Ember,
+answerable and revoking), a declarative spending perimeter verified at
+every transaction (ceilings, recipients, usage markers, validity
+window), and a revocation switch that costs one transaction. The agent
+Kleos builds its commercial asset.
 
-## Validation exigée
+## Required validation
 
-Prototype des périmètres en phase 4 : chaque transaction d'agent est
-rejetée si elle sort du périmètre, et la révocation gèle les dépenses
-dès le bloc suivant.
+Prototype of the perimeters in phase 4: every agent transaction is
+rejected if it leaves the perimeter, and revocation freezes spending
+from the next block onward.

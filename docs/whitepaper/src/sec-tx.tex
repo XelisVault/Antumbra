@@ -1,0 +1,305 @@
+% Sections 4 to 6.
+
+\section{The Life Cycle of a Transaction}\label{sec:tx}
+
+This section describes what lives on the network and how payments work,
+step by step, from the composition of a payment in the wallet to its
+irreversibility. A private transaction worthy of the name must prove four
+things without revealing anything: that the sender owned the funds, that
+the amounts balance, that the coin being spent was never spent elsewhere,
+and that the sender authorized the spending. Each proof rests on a
+distinct cryptographic construction, inherited from the CryptoNote lineage
+that Monero and NERVA have carried for a decade and validated under
+continuous attack. The merit of that lineage is not the invention of
+exotic objects: it is the composition of simple, individually proven
+objects into a system whose privacy property is demonstrable rather than
+declared.
+
+\subsection{Step 1: the one-time address}
+
+Every payment identity publishes two public keys, a viewing key $A$ and a
+spending key $B$. When Alice pays Bob, she draws a random value $r$,
+computes the point $R = rG$, then derives a one-time destination address
+$P$ that nobody can link to Bob's published address. Bob scans every new
+output of the DAG and recognizes his own by replaying the same computation
+with his private viewing key $a$: one multiplication and one addition
+suffice, and a wallet can scan thousands of outputs per second. No address
+is ever reused; graph analysis, the first weapon of transparent chains,
+has no node to hold on to.
+\begin{equation}\label{eq:onetim}
+P = H_s(rA)\,G + B
+\qquad\text{and, on the recipient side,}\qquad
+P = H_s(aR)\,G + B
+\end{equation}
+with $R = rG$ published in the transaction, $H_s$ a hash mapped onto the
+curve, and $G$ the group generator.
+
+\subsection{Step 2: amounts under commitment}
+
+The amount $v$ of each output is never written in clear. It is sealed in
+a Pedersen commitment: an envelope with a remarkable property, addition.
+Two envelopes can be summed, and their sum commits to the sum of the
+amounts, without anyone opening the envelopes. That homomorphy lets the
+network verify conservation of amounts at every spend while remaining
+unable to read a single amount. The blinding factor $b$, specific to each
+output, forbids the brute-force guessing of small amounts, the historical
+weakness of the first masked currencies; it also ties the output to its
+recipient, who alone can reconstruct its value.
+\begin{equation}\label{eq:pedersen}
+C = vH + bG
+\end{equation}
+
+\subsection{Step 3: the ring of decoys}
+
+A spend references prior outputs; referencing them directly would reveal
+the graph. The ring signature therefore selects, around the real output
+being spent, fifteen decoys drawn from the unspent outputs of the DAG:
+sixteen candidate keys, one of them real, and a signature proving
+knowledge of one secret among the sixteen without saying which. The
+probability of identifying the real spend is one in sixteen for an outside
+observer, whatever the computing power; anonymity is probabilistic per
+set, exactly as irreversibility is probabilistic per depth in classical
+proof of work. Decoys are sampled by age brackets following the real
+distribution of spending, so that the composition of the ring does not
+statistically betray the age of the real output.
+
+\subsection{Step 4: the key image, guard against double spending}
+
+Without a guard, the same secret could sign two different rings and spend
+the same output twice. The key image resolves that paradox: a
+deterministic fingerprint of the spent output, published with the
+transaction and stored in a nullifier registry. Two spends of the same
+secret produce the same key image, the network rejects the second, and yet
+the image allows neither tracing back to the real output of the ring nor
+linking two payments of the same wallet: the construction is untraceable
+and unlinkable. Double spending is thereby made structurally impossible
+without sacrificing privacy, a property the CryptoNote lineage has
+demonstrated in production since 2014.
+\begin{equation}\label{eq:keyimage}
+I = x\,H_p(xG)
+\end{equation}
+published and checked against the nullifier registry.
+
+\subsection{Step 5: the range proof}
+
+A commitment masks the amount, but nothing would forbid committing a
+negative amount: spend ten units by fabricating an output of minus ten,
+and the homomorphic arithmetic would still verify while creating money.
+The range proof closes that door: each output proves, without revealing
+$v$, that the amount belongs to the bounded positive interval of
+authorized amounts. ANTUMBRA retains Bulletproofs, already standard in the
+lineage, whose size grows as the logarithm of the precision and whose
+verification, aggregated per block, parallelizes on commodity processors.
+A classical range proof would ruin the throughput; the logarithmic form
+preserves it.
+\begin{equation}\label{eq:range}
+\text{proof: } v \in [0, 2^{64}) \text{ without revealing } v
+\end{equation}
+
+\subsection{Step 6: conservation, signature and fees}
+
+The assembled transaction carries inputs (prior outputs spent in a ring),
+outputs (fresh commitments), key images, range proofs, a bounded free-data
+field, and fees. The central validation rule is one equality: the sum of
+the input commitments, whose composition the sender can open, equals the
+sum of the output commitments plus the fee commitment. Because commitments
+add up, this equality proves conservation of the money mass without ever
+unveiling an amount. The ring signature proves authorization, the key
+images prove non-spending, the range proofs bound the amounts: the four
+requirements of the section opening are each covered by a distinct
+construction, and that separation is what makes the whole auditable
+clause by clause.
+\begin{equation}\label{eq:conservation}
+\sum_{\mathrm{in}} C_j \;=\; \sum_{\mathrm{out}} C_i \;+\; C_{\mathrm{fees}}
+\end{equation}
+
+\subsection{Step 7: stem propagation}
+
+Diffusing a transaction from the sender's IP address would hand the
+network observer what the cryptography has just refused. Dandelion++
+propagation routes the transaction through a stem phase, peer to peer on
+a random path, before blooming into a fluff phase toward the whole
+network: the apparent origin of the diffusion is no longer the sender but
+an anonymous peer several hops away. Tor transport, enabled by default,
+finishes the work by masking the network address of the nodes themselves.
+An observer wanting to link a payment to a machine would have to defeat
+simultaneously the ring, the commitment, the one-time address, the stem
+and the anonymity network: five independent walls, each individually
+proven for years.
+
+\subsection{Step 8: inclusion, checkpoint and irreversibility}
+
+The transaction enters a two-second block, produced by a CPU miner and
+ordered by the DAG. The miner verifies the entirety of the proofs
+described above before including the transaction, and every node replays
+those verifications on reception: the network trusts nobody, it replays
+everything. Inclusion is not yet irreversibility; that comes from the next
+checkpoint, signed every four seconds by the Ring
+(Section~\ref{sec:ring}). As soon as a checkpoint reaches its quorum,
+everything it covers is finalized: a double spend would have to
+simultaneously reorganize the accumulated work of the DAG and break the
+majority of the committee's signatures. For the merchant at the counter,
+the complete sequence, from sending to irreversibility, fits in under six
+seconds.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The transaction types of the network.}
+\label{tab:txtypes}
+\begin{tabularx}{\textwidth}{@{}L{3.6cm}YY@{}}
+\toprule
+Transaction type & Specific content & Additional validation \\
+\midrule
+Transfer & standard Veil outputs & none beyond the eight steps \\
+Mandate & output with a release predicate (Section~\ref{sec:contracts}) & the predicate is executable and bounded in size \\
+Identity registration & Ember or Cipher, sponsor, perimeter & valid sponsor, sponsorship quota, presence proof \\
+Kleos attestation & testimony of $\pm 1$ with on-chain proof & established witness, Echo budget, anti-reciprocity \\
+Governance vote & chamber, proposal, choice & voting right of the relevant chamber \\
+Checkpoint & hash of the ordered DAG tip & quorum of 37 signatures out of 55 seats \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{The fee model}
+
+Fees purchase two real resources: room in blocks, which is bandwidth, and
+verification work, which is processor time of the nodes. The retained
+model is deliberately simple, because a simple model is predictable for
+the merchant, auditable for the node, and hard to game: a fixed part, a
+part proportional to size, and a surcharge per ringed output, the most
+expensive construction to verify. Fees go entirely to miners; no protocol
+levy is added, and the ordering of transactions in the DAG belongs to no
+value extractor: the very structure of the DAG, where parallel blocks are
+ordered by rule consensus, closes the front-running niche that funds the
+mempool wars of builder chains.
+\begin{equation}\label{eq:fees}
+f = f_0 + f_{\mathrm{kB}} \cdot n_{\mathrm{kB}} + f_{\mathrm{ring}} \cdot m
+\end{equation}
+for $m$ ringed outputs and $n_{\mathrm{kB}}$ kibibytes; governance can
+adjust $f_0$ within $[f_{\min}, f_{\max}]$ by the fast track, and outside
+those bounds only by the constitutional track.
+
+To close the section honestly: seven of the eight steps are inherited
+directly from the CryptoNote lineage, proven in production on networks
+processing hundreds of thousands of transactions per day. The
+novelty of ANTUMBRA is the composition, the ring widened to sixteen, the
+two-second cadence that the DAG sustains, and the coupling with the
+finality of the Ring. The only genuinely new construction, checkpoints
+anchored on reputation, is the subject of the next section and of a
+dedicated risk treatment. That distribution of novelty, maximal on rules
+and minimal on primitives, is a decision of method: new cryptographic
+primitives are the graveyard of private currency projects, and the
+roadmap introduces none before external audit.
+
+\section{The Ring: Reputation-Anchored Finality}\label{sec:ring}
+
+Being included in a two-second block is not enough: the payment must also
+become irreversible fast enough for the customer standing at the counter.
+Fault-tolerant-consensus chains solve that problem in exchange for a
+capital lock: one must stake to sign, and whoever can stake buys
+finality. The Ring takes the opposite path. Its fifty-five seats are not
+for sale, they are drawn, at each era, among the identities whose Kleos
+exceeds the candidacy threshold: a deterministic draw, weighted by score,
+over a candidate window published in advance, auditable by everyone. The
+draw formula is linear in score, deliberately: quadratic weighting would
+concentrate seats at the top, and the concentration index of total Kleos,
+monitored by governance, bounds any single actor's share of a cohort in
+any case.
+\begin{equation}\label{eq:draw}
+P(i) = K_i \,\big/\, \sum_{j \in C} K_j
+\end{equation}
+the probability of drawing a seat, for candidates $C$ with Kleos of at
+least 70.
+
+Every four seconds, the Ring collectively signs a checkpoint, the hash of
+the ordered DAG up to a given tip. The Byzantine fault tolerance of a
+committee of fifty-five members admits eighteen faulters; the signature
+quorum is therefore thirty-seven, the strict two thirds. As soon as a
+checkpoint reaches quorum, everything it covers is finalized: a double
+spend would have to simultaneously break the majority of the Ring and the
+continuity of mining, two independent fault economies. A seat that signs
+a competing fork is stripped: its Kleos reset to zero, and with it the
+years that constituted it. The sanction does not fall on a recoverable
+deposit; it falls on the only thing an ANTUMBRA validator owns that is
+precious.
+\begin{equation}\label{eq:bft}
+n = 3f + 1 = 55,\quad f = 18,\quad \text{quorum} = 2f + 1 = 37 \text{ signatures}
+\end{equation}
+
+Failure is designed, not denied. If a third of the seats fall silent,
+through outage, censorship or attack, the network does not stop: mining
+continues, payments continue, and finality falls back on classical
+proof-of-work depth, ten blocks, twenty seconds, until the next era
+removes the silent seats. The Ring is not a production bottleneck, it
+produces nothing: it is a notary of order, and a notary on strike slows
+irreversibility, never payments. That decoupling is the reason an
+egalitarian network can afford world-class finality without ever selling
+its seats.
+
+It must be said once and for all: this assembly is not proof of stake. No
+capital is locked, no yield is paid to seats, no hierarchy of enrichment
+reproduces itself. The power of finality derives from Kleos; Kleos
+derives from behavior and time; and time is for sale nowhere. That is
+the exact correction of the formula that inspired this project, where
+reputation multiplied capital: here, capital multiplies nothing.
+
+\section{Veil and Lumen: Privacy That Can Be Read}\label{sec:veil}
+
+The privacy of ANTUMBRA is private by default and provable on demand:
+two faces of one mechanism, not two contradictory modes. The Veil, tails
+side, makes balances, amounts and payer-paid links invisible to the
+network observer; Section~\ref{sec:tx} described its constructions. The
+Lumen, heads side, lets the owner open exactly the chosen share, for the
+chosen recipient, for the chosen duration. That is the most profitable
+lesson of Zcash, read at first degree: that chain survived regulators who
+fled the opaque lineage because its mechanism is understood by looking at
+it, shielded pools, viewing keys, explicit disclosure. Regulatory
+acceptability is not a question of transparency: it is a question of
+readability.
+
+The Lumen operates on three levels. The per-transaction viewing key: the
+payer proves one precise payment to its single recipient, revealing
+nothing else. The bounded auditor key: an accountant receives a reading
+right capped in time and bounded in scope; they see the flows of one
+activity, not the identity behind it. The compliance proof: a
+non-interactive cryptographic proof establishes a fact, the transferred
+amount stays under a ceiling, the committed funds are older than $n$
+blocks, the balance covers an engagement, without ever revealing amounts,
+addresses or history. Porting those proofs to the Travel Rule and the
+source-of-funds declarations is a phase four work item, built on
+zero-knowledge proofs of the Groth16 family, the claimed technical
+heritage of the project that inspired the agent layer.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Three schools of privacy and their readability.}
+\label{tab:privacy}
+\begin{tabularx}{\textwidth}{@{}L{3.1cm}YYY@{}}
+\toprule
+Mechanism & Monero / NERVA & Zcash & ANTUMBRA \\
+\midrule
+Default view & private (rings) & transparent; shielding optional & private (rings), no transparent pool \\
+Disclosure & binary viewing key & viewing key, selective reveal & three levels: transaction, bounded auditor, proof of fact \\
+Proof of source of funds & impossible & possible via zero-knowledge proofs & native in phase 4 (Groth16) \\
+Data protection posture & neutral & transparent pool engraving relationships & native minimization \\
+Regulatory readability & low, assumed opacity & strong & strong: disclosure is a protocol primitive \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The legal argument fits in one line: a chain masked by default is a chain
+that collects no personal data by default. That is the very definition of
+data minimization, the foundational principle of the European data
+protection regulation: compliance by architecture, not by promise. Where
+transparent chains engrave graphs of personal relationships into world
+history, ANTUMBRA keeps only encrypted commitments and nullifiers; the
+data stays in wallets, under the control of their owners. An authority
+can obtain a targeted disclosure; no authority can demand a mass
+disclosure, because none exists anywhere. The strategic difference with
+the transparent pool of Zcash deserves emphasis: ANTUMBRA maintains
+nothing transparent, because disclosure there is provable rather than
+structural. One does not choose between a glass district and a bunker:
+one lives in the bunker and owns a legally admissible flashlight, lit
+only on request.
