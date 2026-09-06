@@ -10,6 +10,7 @@ resolver = "2"
 members = [
     "crates/antumbra-primitives",
     "crates/antumbra-tx",
+    "crates/antumbra-veil",
 ]
 
 [workspace.package]
@@ -23,6 +24,8 @@ rust-version = "1.85"
 # Consensus-critical primitives: small, audited, pure Rust.
 tiny-keccak = { version = "2.0", default-features = false, features = ["keccak"] }
 ed25519-dalek = { version = "2.1", default-features = false, features = ["fast", "std"] }
+curve25519-dalek = { version = "4.1", default-features = false, features = ["precomputed-tables", "zeroize"] }
+sha2 = { version = "0.10", default-features = false }
 subtle = { version = "2.6", default-features = false }
 antumbra-primitives = { path = "crates/antumbra-primitives", version = "0.1.0" }
 

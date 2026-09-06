@@ -1,0 +1,31 @@
+# The Veil cryptographic core (ADR-011).
+#
+# One-time destination addresses, the deterministic shared secret,
+# Pedersen commitments and key images: the four constructions of the
+# private sphere that every version 2 transaction will assemble. The
+# ring signature and the range proof arrive in later milestones and
+# reuse this crate. Every output-producing routine is cross-validated
+# against an independent implementation
+# (code/scripts/gen_veil_vectors.py) over an archived vector set
+# (tests/vectors.json). A change that alters any output is a
+# consensus change: it goes through an ADR first.
+
+[package]
+name = "antumbra-veil"
+description = "ANTUMBRA private sphere: one-time addresses, commitments, key images"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+curve25519-dalek.workspace = true
+sha2.workspace = true
+subtle.workspace = true
+tiny-keccak.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

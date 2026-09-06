@@ -111,6 +111,27 @@ jobs:
         run: cargo deny --workspace check advisories bans licenses sources
         working-directory: code
 
+  vectors:
+    name: Vector regeneration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install generator dependencies
+        run: pip install -r scripts/requirements.txt
+        working-directory: code
+      - name: Regenerate the three vector sets
+        run: |
+          python3 scripts/gen_vectors.py
+          python3 scripts/gen_tx_vectors.py
+          python3 scripts/gen_veil_vectors.py
+        working-directory: code
+      - name: The committed vectors are exactly the regenerated ones
+        run: git diff --exit-code -- crates
+        working-directory: code
+
   simulation:
     name: Social core regression
     runs-on: ubuntu-latest

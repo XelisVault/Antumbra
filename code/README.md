@@ -14,20 +14,24 @@ code/
   crates/
     antumbra-primitives/      hashes, canonical encoding, keys, addresses
     antumbra-tx/              version 1 transactions: fees, canonical hashing
+    antumbra-veil/            the private sphere: one-time addresses,
+                              commitments, key images
   scripts/
     gen_vectors.py            the independent (Python) implementation
                               that generates the primitives cross vectors
     gen_tx_vectors.py         the independent (Python) implementation
                               that generates the transaction cross vectors
+    gen_veil_vectors.py       the independent (Python) implementation
+                              that generates the Veil core cross vectors
+    requirements.txt          the Python dependencies of the generators
 ```
 
-Crates to come, in milestone order: `antumbra-veil` (one-time
-addresses, rings, commitments, replacing the transparent scaffold
-of version 1), `antumbra-dag` (the BlockDAG ordering layer),
-`antumbra-ring` (checkpoints and finality), `antumbra-kleos`
-(reputation), `antumbra-identities` (Ember and Cipher),
-`antumbra-lumen` (viewing keys), `antumbra-mandates` (predicate
-outputs) and the `antumbra-node` binary that assembles them.
+Crates to come, in milestone order: `antumbra-dag` (the BlockDAG
+ordering layer), `antumbra-ring` (checkpoints and finality),
+`antumbra-kleos` (reputation), `antumbra-identities` (Ember and
+Cipher), `antumbra-lumen` (viewing keys), `antumbra-mandates`
+(predicate outputs) and the `antumbra-node` binary that assembles
+them.
 
 ## The primitives crate
 
@@ -57,6 +61,30 @@ version 2 without moving the container:
 | `error` | one enum for every rejection, each carrying the offending value |
 | `tx` | canonical encoding, signing message, transaction id, strict decoding, stateless validation |
 
+## The Veil core crate
+
+The cryptographic core of the private sphere (ADR-011), the four
+constructions every version 2 transaction assembles. The curve is
+the Ed25519 curve of the transparent sphere; the group arithmetic
+is curve25519-dalek, cross-validated by a from-spec Edwards25519 in
+the vector generator. One invariant everywhere: every point of the
+protocol belongs to the prime-order subgroup, which closes the
+torsion attack class on key images in a single rule.
+
+| Module | Contents |
+|---|---|
+| `curve` | Edwards25519 scalars and points, strict canonical decoding, prime-order subgroup rule |
+| `error` | one enum for every rejection, each carrying the offending bytes |
+| `hash` | Hs, the hash to scalar; Hp, the hash to point with cofactor clearing |
+| `seed` | RFC 8032 wallet scalars, spend and view, reduced to canonical form |
+| `onetime` | the shared secret Hs(rA) = Hs(aR), the one-time address P = Hs(rA) G + B, wallet scanning |
+| `commitment` | the value generator H (a NUMS point), Pedersen commitments C = vH + bG |
+| `keyimage` | the one-time secret key p = Hs(aR) + b, the key image I = p Hp(P) |
+
+The ring signature and the range proof arrive in later milestones
+and reuse this crate unchanged: they consume the points, scalars,
+hashes and commitments defined here.
+
 ## Building and testing
 
 ```bash
@@ -68,21 +96,26 @@ cargo build --workspace --release --locked
 
 The CI runs the full battery on every push and every pull request
 (format, lint, tests, release build, docs, dependency audit,
-license policy, and the Kleos and emission simulations).
+license policy, vector regeneration, and the Kleos and emission
+simulations).
 
 ## The cross vector method
 
 Every output-producing routine is implemented twice: once here in
-Rust, once independently in `scripts/` (pycryptodome for Keccak-256
-and Ed25519, from-spec reimplementations for the encodings).
+Rust, once independently in `scripts/` (pycryptodome for Keccak-256,
+SHA-512 and the Ed25519 reference keys, from-spec reimplementations
+for the encodings and the whole Edwards25519 group of the Veil).
 `gen_vectors.py` covers the primitives, `gen_tx_vectors.py` the
-transaction layer; each writes an archived vector set to the
-`tests/vectors.json` of its crate, and each Rust test suite must
-reproduce all of it bit for bit. To regenerate:
+transaction layer, `gen_veil_vectors.py` the Veil core; each writes
+an archived vector set to the `tests/vectors.json` of its crate, and
+each Rust test suite must reproduce all of it bit for bit. To
+regenerate:
 
 ```bash
+pip install -r scripts/requirements.txt
 python3 scripts/gen_vectors.py
 python3 scripts/gen_tx_vectors.py
+python3 scripts/gen_veil_vectors.py
 ```
 
 The generators verify their own output before writing it (strict

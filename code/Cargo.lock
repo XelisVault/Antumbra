@@ -23,6 +23,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "antumbra-veil"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "curve25519-dalek",
+ "serde",
+ "serde_json",
+ "sha2",
+ "subtle",
+ "tiny-keccak",
+]
+
+[[package]]
 name = "base64ct"
 version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
