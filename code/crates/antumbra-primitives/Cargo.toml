@@ -1,0 +1,26 @@
+# Consensus-critical primitives: hashing, canonical encoding,
+# keys and addresses.
+#
+# Every routine here is cross-validated against an independent
+# implementation (code/scripts/gen_vectors.py) over an archived
+# set of test vectors (tests/vectors.json). A change to this crate
+# that changes any output is a consensus change: it goes through
+# an ADR first.
+
+[package]
+name = "antumbra-primitives"
+description = "ANTUMBRA consensus primitives: hashes, canonical encoding, keys, addresses"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tiny-keccak.workspace = true
+ed25519-dalek.workspace = true
+subtle.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

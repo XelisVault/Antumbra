@@ -2,6 +2,8 @@
 
 **The trust layer of the human-machine economy.**
 
+[![CI](https://github.com/XelisVault/Antumbra/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/XelisVault/Antumbra/actions/workflows/ci.yml)
+
 ANTUMBRA is a private-by-default settlement blockchain, finalized in
 under six seconds, mineable on commodity processors, and governed by a
 reputation that capital cannot buy. It separates humans (the **Embers**,
@@ -47,7 +49,9 @@ next to the PDF and is revised like code.
 docs/whitepaper/   the whitepaper v1.1 (PDF, 20 pages) and its LaTeX source
 spec/adr/          the architecture decisions (ADR 000 to 007)
 simulations/       the deterministic simulator of the social core (Kleos)
-code/              the starting point of the node (phase 2 of the roadmap)
+code/              the Rust workspace of the node (primitives built,
+                   cross-validated; the remaining crates follow the
+                   roadmap order)
 ```
 
 The simulator in `simulations/` replays sixteen years of network
@@ -64,7 +68,7 @@ cd simulations && python3 kleos.py
 
 ## Status and roadmap
 
-The project is in **phase 1: specification**. The full roadmap
+The project is in **phase 2: the node prototype**. The full roadmap
 (eighteen months, six phases, one binary exit criterion per step) is
 detailed in the whitepaper:
 

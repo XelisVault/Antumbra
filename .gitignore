@@ -1,3 +1,6 @@
-# artefacts de calcul
+# build artifacts
+target/
+
+# python
 __pycache__/
 *.pyc

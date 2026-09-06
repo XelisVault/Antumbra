@@ -1,0 +1,32 @@
+# ANTUMBRA node workspace.
+#
+# One crate per whitepaper subsystem, one milestone at a time:
+# the roadmap codes the foundations first, the social layers last.
+# See spec/adr/ and docs/whitepaper/ for the decisions this code
+# implements.
+
+[workspace]
+resolver = "2"
+members = ["crates/antumbra-primitives"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/XelisVault/Antumbra"
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Consensus-critical primitives: small, audited, pure Rust.
+tiny-keccak = { version = "2.0", default-features = false, features = ["keccak"] }
+ed25519-dalek = { version = "2.1", default-features = false, features = ["fast", "std"] }
+subtle = { version = "2.6", default-features = false }
+
+# Test-only: reading the archived cross-implementation vectors.
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"

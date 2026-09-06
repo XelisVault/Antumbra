@@ -1,0 +1,127 @@
+# ANTUMBRA continuous integration.
+#
+# Every push and every pull request runs the full check battery.
+# A red check on main blocks the phase: no exception, no bypass.
+# This is the executable layer of the CONTRIBUTING.md verification
+# method (cross vectors, deterministic simulation, reproducible
+# builds).
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  RUST_BACKTRACE: "1"
+
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+        working-directory: code
+
+  clippy:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: code
+      - name: Lint (zero warnings tolerated)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+        working-directory: code
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: code
+      - name: Unit, integration and cross-implementation vector tests
+        run: cargo test --workspace
+        working-directory: code
+      - name: Documentation tests
+        run: cargo test --workspace --doc
+        working-directory: code
+
+  build:
+    name: Build (release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: code
+      - name: Release build
+        run: cargo build --workspace --release --locked
+        working-directory: code
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build docs (broken links are errors)
+        run: cargo doc --workspace --no-deps --document-private-items
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        working-directory: code
+
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - name: Audit dependencies for known vulnerabilities
+        run: cargo audit
+        working-directory: code
+
+  deny:
+    name: Licenses and bans
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+      - name: Check licenses, advisories and duplicate versions
+        run: cargo deny --workspace check advisories bans licenses sources
+        working-directory: code
+
+  simulation:
+    name: Social core regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Kleos simulation (rules R1 to R4 must hold)
+        run: python3 kleos.py
+        working-directory: simulations
+      - name: Emission calendar (cap must be exact)
+        run: python3 emission.py
+        working-directory: simulations
