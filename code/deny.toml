@@ -1,14 +1,15 @@
 # cargo-deny configuration.
 #
-# Advisories: no known vulnerability may ever reach main.
+# Advisories: no known vulnerability may ever reach main; the
+# unmaintained advisory scope covers the whole dependency tree of
+# workspace crates.
 # Bans: duplicate crate versions are tracked loudly; new duplicates
 # require a reviewed explicit skip below, never a silent accept.
 # Licenses: permissive licenses only, no unknown terms.
 
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
 yanked = "deny"
+unmaintained = "transitive"
 
 [bans]
 multiple-versions = "warn"
@@ -17,16 +18,14 @@ highlight = "all"
 
 [licenses]
 confidence-threshold = 0.93
+# The permissive set actually encountered in the dependency tree.
+# Additions are deliberate, one per reviewed crate, never blanket.
 allow = [
     "MIT",
     "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception",
-    "BSD-2-Clause",
     "BSD-3-Clause",
-    "ISC",
+    "CC0-1.0", # tiny-keccak, the Keccak reference in Rust
     "Unicode-3.0",
-    "Unicode-DFS-2016",
-    "Zlib",
 ]
 
 [sources]
