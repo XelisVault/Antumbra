@@ -1,0 +1,26 @@
+# Version 1 transactions: the transparent scaffold (ADR-010).
+#
+# The transaction container, the fee model and the canonical hashing
+# defined here are final; the clear amounts and per-input Ed25519
+# signatures are the development network scaffold, replaced by the
+# Veil constructions in version 2. Every output-producing routine is
+# cross-validated against an independent implementation
+# (code/scripts/gen_tx_vectors.py) over an archived vector set
+# (tests/vectors.json). A change that alters any output is a
+# consensus change: it goes through an ADR first.
+
+[package]
+name = "antumbra-tx"
+description = "ANTUMBRA version 1 transactions: canonical encoding, fee schedule, signatures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

@@ -89,6 +89,11 @@ impl Writer {
         self.out.push(u8::from(v));
     }
 
+    /// Writes a canonical varint: a count or a length field.
+    pub fn write_varint(&mut self, v: u64) {
+        write_varint(v, &mut self.out);
+    }
+
     /// Writes a length-prefixed byte string.
     pub fn write_bytes(&mut self, v: &[u8]) {
         write_varint(v.len() as u64, &mut self.out);
@@ -243,6 +248,8 @@ mod tests {
         w.write_u64(0x0123_4567_89ab_cdef);
         w.write_bool(true);
         w.write_bool(false);
+        w.write_varint(0);
+        w.write_varint(300);
         w.write_bytes(b"antumbra");
         w.write_array(&[1u8, 2, 3, 4]);
 
@@ -254,9 +261,25 @@ mod tests {
         assert_eq!(r.read_u64(), Ok(0x0123_4567_89ab_cdef));
         assert_eq!(r.read_bool(), Ok(true));
         assert_eq!(r.read_bool(), Ok(false));
+        assert_eq!(r.read_varint(), Ok(0));
+        assert_eq!(r.read_varint(), Ok(300));
         assert_eq!(r.read_bytes(), Ok(&b"antumbra"[..]));
         assert_eq!(r.read_array::<4>(), Ok([1u8, 2, 3, 4]));
         assert_eq!(r.finish(), Ok(()));
+    }
+
+    #[test]
+    fn varint_count_roundtrip() {
+        // Counts written as bare varints decode back exactly: the
+        // form used by length fields of composite structures.
+        for value in [0u64, 1, 127, 128, 300, 16384, u64::from(u32::MAX)] {
+            let mut w = Writer::new();
+            w.write_varint(value);
+            let bytes = w.finish();
+            let mut r = Reader::new(&bytes);
+            assert_eq!(r.read_varint(), Ok(value));
+            assert_eq!(r.finish(), Ok(()));
+        }
     }
 
     #[test]

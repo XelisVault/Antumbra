@@ -14,6 +14,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "antumbra-tx"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "base64ct"
 version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -13,13 +13,17 @@ code/
   deny.toml                   license and advisory policy
   crates/
     antumbra-primitives/      hashes, canonical encoding, keys, addresses
+    antumbra-tx/              version 1 transactions: fees, canonical hashing
   scripts/
     gen_vectors.py            the independent (Python) implementation
-                              that generates the cross vectors
+                              that generates the primitives cross vectors
+    gen_tx_vectors.py         the independent (Python) implementation
+                              that generates the transaction cross vectors
 ```
 
-Crates to come, in milestone order: `antumbra-veil` (private
-transactions), `antumbra-dag` (the BlockDAG ordering layer),
+Crates to come, in milestone order: `antumbra-veil` (one-time
+addresses, rings, commitments, replacing the transparent scaffold
+of version 1), `antumbra-dag` (the BlockDAG ordering layer),
 `antumbra-ring` (checkpoints and finality), `antumbra-kleos`
 (reputation), `antumbra-identities` (Ember and Cipher),
 `antumbra-lumen` (viewing keys), `antumbra-mandates` (predicate
@@ -33,10 +37,25 @@ Everything consensus-critical at the byte level:
 |---|---|
 | `hash` | Keccak-256, the single identifier hash of the protocol |
 | `varint` | canonical unsigned LEB128, non-canonical forms rejected |
-| `encode` | canonical `Writer`/`Reader`: fixed-width integers, strict booleans, length-prefixed bytes |
+| `encode` | canonical `Writer`/`Reader`: fixed-width integers, strict booleans, varint counts, length-prefixed bytes |
 | `keys` | Ed25519 key pairs, view seed derivation (Keccak of the spend seed), strict verification |
 | `base58` | CryptoNote block base58 with full canonicality checks |
 | `address` | network byte + spend key + view key + Keccak-4 checksum, 95 characters |
+
+## The transaction crate
+
+Version 1 transactions, the transparent scaffold of ADR-010: a
+final container (canonical encoding, transaction id, fee field,
+structural limits, strictly sorted inputs) around clear amounts and
+per-input Ed25519 signatures, replaced by the Veil constructions in
+version 2 without moving the container:
+
+| Module | Contents |
+|---|---|
+| `amount` | u64 atomic units, eight decimals (ADR-008), checked arithmetic |
+| `fee` | the three-component schedule and the minimum-fee formula (ADR-009) |
+| `error` | one enum for every rejection, each carrying the offending value |
+| `tx` | canonical encoding, signing message, transaction id, strict decoding, stateless validation |
 
 ## Building and testing
 
@@ -54,16 +73,19 @@ license policy, and the Kleos and emission simulations).
 ## The cross vector method
 
 Every output-producing routine is implemented twice: once here in
-Rust, once independently in `scripts/gen_vectors.py` (pycryptodome
-for Keccak-256 and Ed25519, a from-spec reimplementation for the
-encodings). The generator writes an archived vector set to
-`crates/antumbra-primitives/tests/vectors.json`; the Rust test
-suite must reproduce all of it bit for bit. To regenerate:
+Rust, once independently in `scripts/` (pycryptodome for Keccak-256
+and Ed25519, from-spec reimplementations for the encodings).
+`gen_vectors.py` covers the primitives, `gen_tx_vectors.py` the
+transaction layer; each writes an archived vector set to the
+`tests/vectors.json` of its crate, and each Rust test suite must
+reproduce all of it bit for bit. To regenerate:
 
 ```bash
 python3 scripts/gen_vectors.py
+python3 scripts/gen_tx_vectors.py
 ```
 
-The vectors are committed: they are the memory of faults already
-caught. Editing them by hand is forbidden; only the generator
-writes that file.
+The generators verify their own output before writing it (strict
+roundtrip, signature verification, rule checks); the vectors are
+committed: they are the memory of faults already caught. Editing
+them by hand is forbidden; only the generators write those files.

@@ -7,7 +7,10 @@
 
 [workspace]
 resolver = "2"
-members = ["crates/antumbra-primitives"]
+members = [
+    "crates/antumbra-primitives",
+    "crates/antumbra-tx",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -21,6 +24,7 @@ rust-version = "1.85"
 tiny-keccak = { version = "2.0", default-features = false, features = ["keccak"] }
 ed25519-dalek = { version = "2.1", default-features = false, features = ["fast", "std"] }
 subtle = { version = "2.6", default-features = false }
+antumbra-primitives = { path = "crates/antumbra-primitives", version = "0.1.0" }
 
 # Test-only: reading the archived cross-implementation vectors.
 serde = { version = "1.0", default-features = false, features = ["derive"] }
