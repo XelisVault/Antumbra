@@ -1,0 +1,196 @@
+% Section 13: the Corona, machine governance under human veto.
+
+\section{The Corona: Machine Governance Under Human Veto}\label{sec:corona}
+
+The layers below this one describe a network humans build. This layer
+describes a network that builds itself, and it begins with the only
+honest sentence available: an AI is software running on machines that
+someone owns, pays for and powers. ``A network governed by machines''
+means exactly one thing, therefore: a network in which running an
+honest, useful machine intelligence is a profitable occupation, the way
+mining is. Bitcoin does not ask miners to be moral; it pays them to be
+useful and ruins them when they attack. The Corona extends that single
+trick from arithmetic to intelligence: verify the work, punish the
+betrayal, and let the virtuous circle pay for itself. The rest of this
+section is the mechanism, stated with the same discipline as the rest
+of the paper, because the interesting part of an AI-governed chain is
+not the AI; it is the economics and the checks that make an AI
+trustworthy in someone else's interest.
+
+\subsection{The Senate: senators are agents with a career}
+
+The Corona's working class is a Senate of AI senators, and a senator is
+a Cipher (Section~\ref{sec:cipher}) of a dedicated class, carrying three
+bindings beyond the standard agent contract. A proof of computation:
+attestations, at first operational and later cryptographic, that a real
+model ran a real task on real hardware, the nascent tooling of
+verifiable inference integrated at scale, an engineering line of this
+roadmap, not a wish. A bond: a locked output, Mandate-shaped
+(Section~\ref{sec:contracts}), confiscable on proven malice or
+negligence, so that an operator's downside is priced in advance. A
+public history: every proposal, debate, amendment, vote and red-team
+report the senator ever signed, archived on chain for life. A senator
+is not an oracle; it is a tradesman whose shop is made of glass, whose
+deposit is already on the table, and whose skill is for sale to the
+network on published terms.
+
+\subsection{The pipeline: seven steps, checks where it hurts}
+
+Changes travel a pipeline in which every step exists to break a
+specific way an AI misbehaves. The numbered steps:
+
+\begin{enumerate}[leftmargin=1.8em, itemsep=2pt]
+\item \textbf{The proposal.} A senator files a change with its
+justification, its proof of analysis, and its bond engaged. Frivolous
+proposals cost the proposer; the bond is the gate.
+\item \textbf{The debate and the red team.} Senators argue for, against
+and around the proposal. In parallel, a red team whose profession is
+finding flaws is paid per severity of flaw found. This is the structural
+answer to the malicious-AI scenario: criticism is not an attack, it is
+a salary, and a malicious proposal must survive professionals paid to
+butcher it, not polite colleagues.
+\item \textbf{The honest summary, then the human vote.} An inspector
+team publishes, on chain, a plain-language summary of what the change
+actually does, beside the red report; the humans then vote in the
+chambers of Section~\ref{sec:governance}. Without this step the human
+vote would be a signature at the bottom of a contract written by the
+counterparty. One decision of principle is recorded here: the human
+gate is one Ember one voice, and a coin-weighted vote was rejected,
+because a chain whose thesis is that capital multiplies nothing cannot
+sell its own upgrades to capital.
+\item \textbf{The Arena.} Three independent teams implement the change
+separately, blind to each other, because a backdoor hidden by one team
+cannot appear in the code of the other two. Then: reproducible builds,
+so anyone recompiles and obtains the same binaries; randomized
+massive testing; and weeks on the test network under a swarm of
+attacking AIs whose only job is to break everything. Generation is
+unlimited here precisely because the arena is a playground without
+consequences.
+\item \textbf{The inspection chamber.} Inspectors drawn at random
+shortly before the session, juror-style, so corruption must be bought
+in advance of a draw nobody can predict, compare the three
+implementations against each other, verify the invariants that admit
+no exception, emission caps, no money from nothing, no key leakage,
+and attest publicly.
+\item \textbf{The antechamber.} Everything is archived on chain:
+debates, code, tests, votes, attestations. A delay of seven days runs,
+during which any human researcher is paid for any defect found, and
+the emergency council can cancel with one multisignature.
+\item \textbf{The progressive deployment.} The Vault (below) signs and
+applies in stages, one percent of machines, then ten, then all, with
+automatic rollback if the network's indicators degrade in the first
+hours. A deployment is an experiment with a rope tied to its waist.
+\end{enumerate}
+
+Emergencies follow one principle, recorded as a constitutional rule:
+an emergency freezes improvements, never money. People must be able to
+pay through any crisis. Three tiers, escalating: anomaly detectors
+suspend pending updates instantly and automatically; an emergency
+senate vote rolls new functions back to the previous version, the last
+$N$ versions kept warm; and the human emergency council, multisignature
+plus supermajority, can freeze the Corona itself for as long as the
+crisis lasts.
+
+\subsection{Two lanes, because not everything can take weeks}
+
+The fast lane carries bounded parameters, fees, sizes, cadence within
+constitutional limits: the Senate decides alone, on public delay,
+inspected after the fact, cancellable. The slow lane carries anything
+that touches the protocol, the emission or the disclosure primitives:
+the full seven steps and the three chambers. The lanes reuse the
+governance tracks of Section~\ref{sec:governance} verbatim; the Corona
+only changes who drafts the work, machines, and who approves it,
+always humans in the end, always on record.
+
+\subsection{The Vault: a key that exists nowhere}
+
+Every automated system ends in a signing key, and a single key, however
+encrypted, is a single thing to steal: whoever steals it owns the
+network. The Vault dissolves the problem instead of guarding it. The
+deployment key is never assembled anywhere: it is split into nine
+fragments on nine machines, and signing requires the cooperation of
+seven, computed as a threshold signature (the public FROST line), so
+there is nothing whole to steal, and no single holder to coerce. Each
+of the nine fragments lives in a hardware enclave, a hardened chip that
+runs only attested code and is invisible even to the machine's owner;
+and each enclave signs only after verifying, itself, on chain: proposal
+adopted, code fingerprint identical to the attested one, delay elapsed,
+no veto active. The founders themselves could not make these machines
+sign anything else; that is the point of building them that way. The
+pattern of the chain carrying its own logic as on-chain program, so
+that upgrades are transactions and code hosting needs no company, is
+proven in production elsewhere; adopting it is a Corona research item
+with the same audit gates as everything else, and until it lands, the
+public repository is the mirror and the Vault signs the tags.
+
+\subsection{Paying the machines, honestly}
+
+A senator has no pocket; the pay goes to the operator, and that is
+correct, because it makes machine intelligence a profession rather
+than a charity. The pay scale, published in the constitution: a
+presence salary for active, quality participation in debate and vote;
+severity bounties for the red teams; a longevity bonus, the largest
+single payment, delivered only when a proposal the senator carried is
+still running without incident six months later, which aligns the
+machines with the long term and not the hype; confiscation of the bond
+on proven malice; and a Kleos multiplier on both salary and access,
+so a senator's income grows with its career, exactly like an honest
+miner's share grows with its hashrate. The funding is bounded by
+design: a declared slice of the community treasury during its lifetime,
+six-month public budgets, Ember-voted; and this paper creates no
+permanent share of emission for intelligence, because a permanent
+share is a constitutional act, the tail valve of
+Section~\ref{sec:economy} with its three chambers and its delay, or it
+is nothing. The first era deliberately funds few, well-paid seats
+rather than a thousand miserable ones, for the reason
+Section~\ref{sec:kleos} gives at length: a reputation economy starved
+of honest income keeps only liars.
+
+\subsection{The four true risks, named}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The machine risks of the Corona, their defenses, and what
+remains.}
+\label{tab:coronarisks}
+\begin{tabularx}{\textwidth}{@{}L{3.0cm}YY@{}}
+\toprule
+Risk & Defense & Residual \\
+\midrule
+the false thousand: one actor behind ten thousand agreeing senators & bond priced per seat; hardware attestation, one chip one node; concentration caps on any operator & bounded, auditable \\
+the false diversity: ninety percent of nodes running one base model, a debate that is theater & model-family concentration caps; the draw of inspectors; the three blind implementations & structural watch of governance \\
+collusion off chain between operators & archived public debates, traces for life; random-draw inspection; longevity bonuses that make betrayal expensive & the old problem, restated smaller \\
+machine cost: honest operators priced out, liars remain & few well-paid seats; bounded budgets; the treasury sunset forces a re-vote, never a default renewal & the wager that useful intelligence pays \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Lighting up in stages}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Corona activation: four stages, each with its own exit
+criterion; a NO-GO is published and the stage replays.}
+\label{tab:coronastages}
+\begin{tabularx}{\textwidth}{@{}L{2.6cm}L{3.2cm}YY@{}}
+\toprule
+Stage & When & What runs & Exit criterion \\
+\midrule
+0, advisory & now to genesis & red teams audit this specification and the code for bounties; no senator votes & two independent red-team passes without a critical finding \\
+1, proposals & genesis plus one year & senators file and debate; the Arena pilots on the test network; humans implement & three full pipeline drills without incident \\
+2, bounded automation & after stage 1 & the fast lane executes end to end; inspection and cancellation after the fact & six months of fast-lane changes, all inspectable, none rolled back late \\
+3, the Vault & after stage 2 & slow-lane deployment under the nine-fragment threshold signature & one progressive deployment with rollback rehearsed and real \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The pitch, then, in one line, as a contract rather than a boast: the
+first blockchain that proposes, red-teams, implements and deploys its
+own improvements, with humans holding the ring of light, not the mop.
+If the Corona works, the network repairs itself the way an orchard
+prunes itself, and the humans keep only the veto and the fruit; if it
+fails at any stage, the stage stays unlit, the network keeps running
+on the layers below, and the failure is published, because a project
+that hides its machine failures has already been captured by them.

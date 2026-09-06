@@ -23,7 +23,11 @@ computes the point $R = rG$, then derives a one-time destination address
 $P$ that nobody can link to Bob's published address. Bob scans every new
 output of the DAG and recognizes his own by replaying the same computation
 with his private viewing key $a$: one multiplication and one addition
-suffice, and a wallet can scan thousands of outputs per second. No address
+suffice, and a wallet can scan thousands of outputs per second. Each
+output also carries a one-byte view tag, the top byte of the shared
+secret: for the outputs whose tag does not match, Bob's wallet skips the
+curve derivation entirely, so scanning stays linear and cheap at a
+two-second cadence. No address
 is ever reused; graph analysis, the first weapon of transparent chains,
 has no node to hold on to.
 \begin{equation}\label{eq:onetim}
@@ -53,13 +57,19 @@ C = vH + bG
 
 A spend references prior outputs; referencing them directly would reveal
 the graph. The ring signature therefore selects, around the real output
-being spent, fifteen decoys drawn from the unspent outputs of the DAG:
+being spent, fifteen decoys drawn from the outputs already ordered by the
+DAG, never from its unordered frontier (Section~\ref{sec:settlement}):
 sixteen candidate keys, one of them real, and a signature proving
 knowledge of one secret among the sixteen without saying which. The
 probability of identifying the real spend is one in sixteen for an outside
 observer, whatever the computing power; anonymity is probabilistic per
 set, exactly as irreversibility is probabilistic per depth in classical
-proof of work. Decoys are sampled by age brackets following the real
+proof of work. Sixteen equals the strongest ring the lineage deploys in
+production today, Monero's enforced size since 2022; it is a launch floor
+rather than a ceiling, and the lineage's own research toward
+full-chain membership proofs is the direction the network watches, ready
+to inherit once it is battle-tested by others first. Decoys are sampled
+by age brackets following the real
 distribution of spending, so that the composition of the ring does not
 statistically betray the age of the real output.
 
@@ -87,8 +97,9 @@ negative amount: spend ten units by fabricating an output of minus ten,
 and the homomorphic arithmetic would still verify while creating money.
 The range proof closes that door: each output proves, without revealing
 $v$, that the amount belongs to the bounded positive interval of
-authorized amounts. ANTUMBRA retains Bulletproofs, already standard in the
-lineage, whose size grows as the logarithm of the precision and whose
+authorized amounts. ANTUMBRA retains Bulletproofs+, the lineage standard
+in production since 2022, whose size grows as the logarithm of the
+precision and whose
 verification, aggregated per block, parallelizes on commodity processors.
 A classical range proof would ruin the throughput; the logarithmic form
 preserves it.
@@ -244,6 +255,61 @@ derives from behavior and time; and time is for sale nowhere. That is
 the exact correction of the formula that inspired this project, where
 reputation multiplied capital: here, capital multiplies nothing.
 
+\subsection{The Genesis Ring: bootstrapping finality without privileges}
+
+The strictness of R1 raises an honest question: if candidacy demands
+fifteen incident-free eras, who signs the checkpoints during the seven
+and a half years in which nobody can honestly qualify? The answer must
+not be a founder key, an appointed council, or a lowered guard: each of
+those would import, on day one, exactly the privilege the network
+promises to abolish. The answer is a published ratchet, stricter than
+the steady state, never weaker.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The bootstrap ratchet. Checkpointing begins only when the
+qualified pool exists; every parameter only relaxes as the wall of time
+fills.}
+\label{tab:bootstrap}
+\begin{tabularx}{\textwidth}{@{}L{2.6cm}L{3.6cm}L{2.4cm}Y@{}}
+\toprule
+Eras & Finality & Candidacy tenure & Committee, quorum \\
+\midrule
+0 to 2 & proof-of-work depth: 10 blocks, 20 seconds & no candidacy exists & no Ring, no checkpoints \\
+3 to 9 & Ring checkpoints, full force & at least $\min(15,\ e-2)$ eras & $n$ qualified, quorum 45 of 55: tolerates 10 faulters \\
+10 to 17 & Ring checkpoints, full force & at least $\min(15,\ e-2)$ eras & quorum 41 of 55: tolerates 14 faulters \\
+18 on & steady state (R1 complete) & 15 eras, incident-free & quorum 37 of 55: tolerates 18 faulters \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The mechanics, stated so an implementer needs no interpretation. During
+eras 0 to 2 the network runs on classical proof-of-work depth exactly as
+it would during a total outage of the committee: payments settle in
+twenty seconds, an honest and temporary inferiority, published here
+rather than hidden. At era 3 the first candidacy window opens, under the
+tenure rule $\min(15,\ e-2)$: a genesis-era registrant with six
+irreproachable months may run, because requiring seven and a half years
+from a one-era-old network is absurd, while requiring none of anyone
+would betray the wall. The quorum is 45 of 55, stricter than the steady
+37: with a thin reputation base the committee tolerates ten faulters,
+not eighteen, and relaxes only as the population deepens, reaching the
+full fault tolerance at era 18 when the first candidates can hold
+fifteen eras. If fewer than 55 identities qualify, the Ring is partial:
+$n$ seats, quorum $\lfloor 2n/3 \rfloor + 1$, activating at all only
+once at least 21 qualify; if none qualify, checkpoints simply do not
+start and depth finality continues. No seat is ever appointed, held by
+right, or inherited; the draw happens every era among the qualified; and
+no identity may sit more than three consecutive eras, the fourth draw
+excluding it for one era, so the bootstrap class cannot entrench itself
+into the steady state. The ratchet has one direction: as time passes,
+the wall rises for everyone, including the founders, and the committee
+weakens its own supermajority only as the honest population grows. The
+bootstrap is the one place this paper asks for patience, and it says so
+in numbers: finality degrades to twenty seconds for at most eighteen
+months, in exchange for never once trusting an unearned reputation.
+
 \section{Veil and Lumen: Privacy That Can Be Read}\label{sec:veil}
 
 The privacy of ANTUMBRA is private by default and provable on demand:
@@ -267,9 +333,44 @@ non-interactive cryptographic proof establishes a fact, the transferred
 amount stays under a ceiling, the committed funds are older than $n$
 blocks, the balance covers an engagement, without ever revealing amounts,
 addresses or history. Porting those proofs to the Travel Rule and the
-source-of-funds declarations is a phase four work item, built on
-zero-knowledge proofs of the Groth16 family, the claimed technical
-heritage of the project that inspired the agent layer.
+source-of-funds declarations is a phase four research work item, and the
+paper is deliberately conservative about it: the proof family, succinct
+arguments with or without a trusted setup, will be chosen at that date
+under the then-current state of the art and an external audit, because a
+trusted-setup ceremony is a liability to be justified, not a heritage to
+be claimed. The pre-genesis rule stands unchanged: no exotic primitive
+before the network exists, and nothing phase four activates without the
+same audit discipline as the launch itself.
+
+\subsection{The firewall between identity and money}
+
+One tension of this design must be named and closed, because a reader of
+the first version named it correctly: Kleos is a public consensus score,
+sponsorship and attestation are on-chain social facts, while the Veil
+promises unlinkable money. A reputation money cannot buy, paid for by a
+graph anyone can read, sitting next to private payments, is a
+correlation surface if the two spheres touch. The firewall is a set of
+protocol rules, stated once and enforced everywhere.
+
+First, separation of keys by construction: identity keys and wallet keys
+grow from different trees, an identity transaction carries no Veil input
+or output and a payment carries no identity field, and the encodings are
+disjoint, so a mixed object is rejected as malformed, not merely
+discouraged. Second, minimum revelation: an Echo attestation publishes
+the witness identity, the target identity, a sign and an era, nothing
+else, no memo, no amount, no reference to any output; a sponsorship
+publishes two identity keys. Third, and it must be said honestly, the
+identity layer is pseudonymous, not anonymous: the graph of who
+sponsors whom, who testifies for whom, who sits in the Ring is public,
+because auditable reputation is the product; what the firewall protects
+is the junction with money, and the wallet side is where the practical
+discipline lives, published as implementation requirements: identity
+actions and payments never leave the same machine through the same Tor
+circuit, and the reference wallet enforces it. The residual exposure is
+therefore bounded and stated: correlating an Ember with balances
+requires evidence from outside the protocol, never the protocol's own
+records. Lumen repairs what Kleos cannot: the score is public, the money
+stays dark.
 
 \begin{table}[htbp]
 \centering
@@ -282,7 +383,7 @@ Mechanism & Monero / NERVA & Zcash & ANTUMBRA \\
 \midrule
 Default view & private (rings) & transparent; shielding optional & private (rings), no transparent pool \\
 Disclosure & binary viewing key & viewing key, selective reveal & three levels: transaction, bounded auditor, proof of fact \\
-Proof of source of funds & impossible & possible via zero-knowledge proofs & native in phase 4 (Groth16) \\
+Proof of source of funds & impossible & possible via zero-knowledge proofs & research item, phase 4, family chosen at that date under audit \\
 Data protection posture & neutral & transparent pool engraving relationships & native minimization \\
 Regulatory readability & low, assumed opacity & strong & strong: disclosure is a protocol primitive \\
 \bottomrule

@@ -21,11 +21,15 @@ over again, phase by phase, on the roadmap of Section~\ref{sec:roadmap}.
 Threat & Severity & Mitigation & Residual status \\
 \midrule
 mining reorganization (majority attack) & high & Ring checkpoints: everything signed is immutable; the attack only prospers on the six-second window & reduced; double spending remains possible on the unsigned window \\
-Ring collusion (55 seats) & high & weighted draw over a large population, rotation each era, total stripping on the first signed fork & low in steady regime; real during the first eras \\
+Ring collusion (55 seats) & high & weighted draw over a large population, rotation each era, term limit of three eras, total stripping on the first signed fork & low in steady regime; real during the first eras \\
 massive reputation purchase & high & the Tenure layer is not monetizable; Echo is capped and weighted; concentration index monitored; rules R1 to R4 & structurally blocked by time; the assumed wall \\
 false humanities (sybil on Embers) & medium & sponsorship capped at two per year, sponsor Kleos at stake, presence proof each era & depends on the size of the established web; the first years are the most exposed \\
+DAG on a CryptoNote base (engineering) & high & the seams specified and implemented, $k = 8$, order resolution, decoy sampling, pruning; isolated prototype, dedicated audit, capacity budget with measured exit criteria & difficulty, not uncertainty; the long pole of the roadmap \\
 regulatory frame (MiCA, Travel Rule) & high & the Lumen: provable disclosure, native data minimization; payment-currency strategy & structural, not eliminable; readability is the maximum reachable \\
 strict-cap failure (long-term security) & medium & payment volume as the fee resource; public security budget tracking; constitutional tail safety valve & the assumed wager of the symbolic contract \\
+the false thousand (Corona sybil) & medium & bond per senate seat; hardware attestation, one chip one node; concentration caps & bounded, auditable, staged activation \\
+false diversity (one base model) & medium & model-family caps; random-draw inspection; three blind implementations in the Arena & a standing watch of governance, not a solved problem \\
+machine cost (honest operators priced out) & medium & few well-paid seats; bounded treasury budgets; sunset forces a re-vote & the wager that useful intelligence pays, tested small before large \\
 biometric debt & none & no body data collected, anywhere, ever & none; nothing to leak \\
 \bottomrule
 \end{tabularx}
@@ -62,6 +66,21 @@ which method catches faults before attackers do.
 
 \subsection{Two captured specimens}
 
+Before the specimens, one event worth recording, because it is the
+method working on the method: the first external audit of version 1.1
+(September 2026, an independent reviewer) returned twelve findings,
+factual and design-level, from a wrong RandomX memory figure to the
+unspecified bootstrap of the Ring. Version 1.2 closes the twelve:
+the numbers were corrected, the missing mechanisms were specified
+(the Genesis Ring ratchet, the identity firewall, the precise
+revocation of a Cipher, the capacity budget), the overclaims were cut
+(the ring of sixteen now equals Monero's, it does not triple anything;
+the golden ratio is now named as an identity, not an argument), and
+the simulation now sweeps twelve seeds. The register of what an
+outside eye catches that the author's eye does not is the whole
+argument of layer five below, and this paper has now been through it
+once for real.
+
 First specimen, lived on XelisVault on September 5, 2026. The paper
 wallet generated a twenty-five word mnemonic seed; imported into the
 official NERVA wallet, it restored an address different from the printed
@@ -81,13 +100,14 @@ line of code: the Kleos simulation attack, told in
 Section~\ref{sec:kleos}. A farm of fake profiles crossed the candidacy
 threshold for the Ring before the honest network and captured the
 fifty-five seats; four corrective rules closed the window, and the same
-attack replayed takes no seat. The decisive point is not that the flaw
+attack replayed takes no seat, on any of the twelve seeds. The decisive
+point is not that the flaw
 was found: it is that it was found by a three-hundred-line simulation,
 before any chain code, at a cost in hours of computation and not in
 years of reputation. The deterministic simulation of a specification is
 the cheapest machine there is for catching design faults; every new rule
-of the protocol will be treated that way before implementation, with a
-fixed seed, numeric invariants and a regression run over three attack
+of the protocol will be treated that way before implementation, with
+numeric invariants, a seed sweep and a regression run over three attack
 sets.
 
 \subsection{The six-layer verification protocol}
@@ -120,12 +140,24 @@ its capture, and that is the only promise an honest engineer can make.
 
 \section{Roadmap and Conclusion}\label{sec:roadmap}
 
-The calendar is realistic because it is sized for a small team, not for
-a foundation. The base is an assembly of proven foundations, the
+The first version of this paper pinned an eighteen-month calendar to
+genesis, and the external audit called it what it was: a schedule for a
+skeleton of the scope. Monero, Kaspa and Xelis each spent years on one
+of this project's subsystems. The honest form of a roadmap is
+criteria-driven: the phases below carry month ranges as planning aids
+for a team of at least three full-time engineers, but the binding
+term is the exit criterion of each phase, and genesis happens when
+every criterion is green, not when a Gantt chart says so. The estimate
+the paper stands behind is twenty-four months of full-time work to the
+earliest responsible genesis, with the DAG-plus-rings prototype as the
+long pole, and a published NO-GO as an acceptable outcome at every
+step. The base is an assembly of proven foundations, the
 CryptoNote lineage for the private sphere and the public literature of
 fast-converging DAGs for the ordering layer; everything that is new,
-Kleos, the Ring, the Lumen, Cipher perimeters, Mandates, is
-deterministic, testable, auditable code, with no exotic primitive. Every
+Kleos, the Ring, the Lumen, Cipher perimeters, Mandates, the Corona,
+is
+deterministic, testable, auditable code, with no exotic primitive
+before external audit. Every
 phase carries one measurable deliverable and one binary exit criterion;
 an unmet criterion is not a shameful failure, it is steering data, and
 the phase replays until it is met.
@@ -133,19 +165,19 @@ the phase replays until it is met.
 \begin{table}[htbp]
 \centering
 \small
-\caption{Eighteen months, six phases, one binary exit criterion at every
-step.}
+\caption{Twenty-four months, six phases, one binary exit criterion at
+every step; genesis when green, not when due.}
 \label{tab:roadmap}
 \begin{tabularx}{\textwidth}{@{}L{2.9cm}L{1.4cm}YY@{}}
 \toprule
 Phase & Months & Measurable deliverables & Exit criterion \\
 \midrule
-1, specification & M1-M2 & written protocol, numbered architecture decisions, format sketches, extended social-core simulation & specification read by two external readers \\
-2, DAG prototype & M3-M5 & dev network mining a CPU DAG at two seconds, stem propagation & twenty-four hours without unexpected reorganization \\
-3, Ring and Kleos v0 & M6-M8 & signed checkpoints, Deed score computed, era rotation replayed & finality under six seconds over one hundred thousand replayed blocks \\
-4, identities and Lumen & M9-M12 & Embers with sponsorship, Ciphers with perimeters, bounded viewing keys, external audit of the differential & audit without a critical flaw \\
-5, public test network & M13-M15 & faucet, explorer, one hundred nodes, agent load simulator, upgrade ritual repeated three times & three consecutive upgrades without incident \\
-6, genesis & M16-M18 & public ceremony, signed executables for five platforms, Lumen documentation for authorities published & all previous criteria, without exception \\
+1, specification & M1-M3 & written protocol, numbered architecture decisions, format sketches, extended social-core simulation with the seed sweep, red-team bounties of Corona stage 0 & specification read by two external readers; first audit findings closed \\
+2, DAG prototype & M4-M8 & dev network mining a CPU DAG at two seconds, stem propagation, the capacity budget measured & twenty-four hours without unexpected reorganization; 100 tx/s sustained on the reference node \\
+3, Ring and Kleos v0 & M9-M13 & signed checkpoints, Deed score computed, era rotation replayed, the bootstrap ratchet drilled & finality under six seconds over one hundred thousand replayed blocks \\
+4, identities and Lumen & M14-M18 & Embers with sponsorship, Ciphers with warrants and fallback Mandates, bounded viewing keys, external audit of the differential & audit without a critical flaw \\
+5, public test network & M19-M23 & faucet, explorer, one hundred nodes, agent load simulator, upgrade ritual repeated three times, Arena drills & three consecutive upgrades without incident; 300 tx/s burst validated or the target dropped \\
+6, genesis & M24 at the earliest & public ceremony, signed executables for five platforms, Lumen documentation for authorities published & all previous criteria, without exception \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -157,9 +189,10 @@ register, tickets, paper wallet, becomes multi-chain at phase five: a
 feature flag, not a rewrite, NERVA first, ANTUMBRA after. Finally, the
 project identities, domain, repositories, social networks, are reserved
 before phase two, so that nothing lends itself to confusion on genesis
-day. The roadmap reads as a promise of operational humility: eighteen
-months of measured work, every step verifiable by a third party, and
-none of it depending on a miracle of cryptography.
+day. The roadmap reads as a promise of operational humility:
+criteria-driven work, every step verifiable by a third party, none of
+it depending on a miracle of cryptography, and a calendar that bends to
+the evidence instead of the evidence bending to the calendar.
 
 A faithfully kept shadow, a ring of light anyone can verify on demand:
 privacy as a right, proof as a courtesy, and time as the only justice
@@ -174,7 +207,11 @@ eclipse where a source too small to be hidden lets a ring of light show
 around the shadow. The core of the network is that shadow, balances,
 identities, flows, kept by construction; around it, the ring of
 verification, reputation, finality, compliance proofs, which anyone can
-switch on without exposing anyone other than oneself. The specification
+switch on without exposing anyone other than oneself. Around the ring
+itself, one more loop is sketched and deliberately left unlit until its
+stage criteria are met: the Corona, machine governance under human
+veto, the network learning to prune its own orchard while the humans
+keep the fruit. The specification
 was written to be attacked before being implemented, and that is the
 only honest way to write a whitepaper. To work.
 
@@ -186,6 +223,9 @@ only honest way to write a whitepaper. To work.
 \item tevador et al. \emph{RandomX Proof of Work}. randomx.io, 2019.
 \item Y. Sompolinsky, S. Wyborski, Y. Zohar. \emph{PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus}. 2021.
 \item B. B\"unz, S. Agrawal, S. Boneh, M. Weston. \emph{Bulletproofs: Short Proofs for Confidential Transactions and More}. IEEE S\&P, 2018.
+\item R. Can B\"unz, S. Agrawal, S. Boneh, M. Weston et al. \emph{Zero to Bulletproofs+}. 2020.
+\item C. Komlo, I. Goldberg. \emph{FROST: Flexible Round-Optimized Schnorr Threshold Signatures}. 2020.
+\item S. Noether, B. Goodell et al. \emph{CLSAG: Compressed Linkable Spontaneous Anonymous Group Signatures}. 2020.
 \item S. B. Venkatakrishnan, G. Fanti, M. Zhou, K. Cai, P. Viswanath et al. \emph{Dandelion++: Lightweight Cryptocurrency Networking with Formal Anonymity Guarantees}. ACM ToMPECS, 2018.
 \item T. Pedersen. \emph{Non-Interactive and Information-Theoretic Secure Verifiable Secret Sharing}. EUROCRYPT, 1991.
 \item M. Castro, B. Liskov. \emph{Practical Byzantine Fault Tolerance}. OSDI, 1999.

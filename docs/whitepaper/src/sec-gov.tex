@@ -31,15 +31,20 @@ the council of 70+ & identities with Kleos of at least 70, one vote per qualifie
 \end{table}
 
 The community treasury is the network's only levy: 6.18\,\% of block
-rewards, the inverse of the golden ratio, during the first eight
+rewards, a share chosen for recall, during the first eight
 eclipses, thirty-two years. It is held in multisignature, spent by Ember
 vote, published in full on chain, and extinguishes itself automatically
-at the ninth eclipse: no tacit renewal, no fund of funds. Development is
+at the ninth eclipse: no tacit renewal, no fund of funds. The number is
+a mnemonic; the structure is the argument: bounded in duration,
+budgeted in public, spent by the community, dead by schedule. Its first
+charge is engineering and audit; its second, once the Corona of
+Section~\ref{sec:corona} activates its first working stage, is the
+intelligence budget: senator salaries, red-team bounties and the
+longevity bonuses are paid from a bounded slice of this same treasury,
+never from a new emission channel. Development is
 explicitly funded, because a zero-budget project is a dead project, but
 the resource belongs to the community from the first block: no founder
-allocation, no vesting, no investor. The assumed share becomes a figure
-that says something: 6.18, like the rest of the network's economy,
-speaks the language of the golden ratio. The fast governance track, for
+allocation, no vesting, no investor. The fast governance track, for
 bounded parameters such as base fees, remains subject to public delay
 and cancellation; the constitutional track requires the three chambers
 and a six-month delay. Nothing in that architecture can be changed
@@ -49,14 +54,15 @@ is a public transaction, signed, archived for life.
 \section{Monetary Design: The Golden Ratio Contract}\label{sec:economy}
 
 The currency is called ATU. Its cap is 16,180,339 units, the golden
-ratio multiplied by ten million, rounded to the integer. The symbol is
-not gratuitous: RandomX, the algorithm that will mine those units,
-already seeds the golden ratio in its entrails, since the constant
+ratio multiplied by ten million, rounded to the integer. The choice of
+symbol is an identity, and this version names it as such: the number
+is a brand, chosen so the cap is exactly recitable, and it carries no
+economic load. It is also a pleasant coincidence that RandomX, the
+algorithm that will mine those units, seeds the same proportion in its
+entrails: the constant
 \texttt{0x9E3779B9}, the integer truncation of the golden ratio in
 binary arithmetic, drives the generation of its superscalar programs.
-The same proportion that distributes the instructions of mining bounds
-the money mass it extracts. A currency whose cap and whose algorithm
-speak the same mathematical language is a contract one can recite from
+A contract one can recite from
 memory, to within one digit, in ten years: sixteen million, the golden
 ratio, RandomX.
 \begin{equation}\label{eq:phi}
@@ -73,11 +79,13 @@ cap, the golden cut obtained with the round-number yardstick. The series
 continues for thirty-four eclipses, the last absorbing the exact
 remainder; 99\,\% of the mass exists around year forty, 99.9\,\% around
 year sixty, and the ledger closes exactly at the cap in year 136. The
-tempo is deliberately Bitcoin's, one easing every four years; the
-proportion remained golden: where Bitcoin cuts in half, ANTUMBRA cuts
-the golden section, 38.2\,\%. A monetary calendar must outlive its first
-miners: every generation finds an active emission, as every generation
-of sunflower spirals finds its golden angle.
+tempo is deliberately Bitcoin's, one easing every four years, because
+four years is a proven social rhythm for a monetary calendar; the
+proportion remained golden, 38.2\,\%, because it slows the decay gently
+enough that every generation of miners finds an active emission.
+Those are the functional reasons; the golden framing around them is
+the network's identity, kept because a contract people can recite is a
+contract people trust, and dropped nowhere else.
 \begin{equation}\label{eq:eclipse}
 E_k = \left\lfloor E_0 \cdot \varphi^{-k} \right\rfloor,
 \qquad E_0 = 6{,}180{,}340 \text{ ATU}
@@ -140,18 +148,28 @@ transaction fees & 100\,\% to miners & no protocol share; the DAG closes the ord
 \end{tabularx}
 \end{table}
 
-Two questions deserve a frank answer. Why 16.18 million rather than one
-hundred million? Because demand has changed nature: the network targets
-the trust reserve of an economy of agents and humans, where each unit
-carries a load of reputation and finality; the order of magnitude joins
-Monero's, the reference of private currencies, with a divisibility of
-one hundred million that keeps counting comfortable at both ends. Why a
+Two questions deserve a frank answer, and the first version of this
+paper answered one of them badly. Why 16.18 million rather than one
+hundred million? The honest reasons are three, none of them mystical:
+the network's business is payment, not speculation, and a
+smaller unit mass keeps fees meaningful per transaction; the order of
+magnitude joins Monero's, the reference of private currencies, with a
+divisibility of one hundred million that keeps counting comfortable at
+both ends; and the cap is exactly recitable, sixteen million, the
+golden ratio, ten million, which a merchant can hold in mind for a
+decade. The golden ratio is the network's visual and mnemonic identity,
+not an economic argument, and this version of the paper says so
+directly: 16.18 is an identity, 6.18 is an identity, the RandomX
+constant is a coincidence the paper enjoys, and none of them carries a
+monetary load. Why a
 strict cap, with no eternal emission tail? Because the network's reason
 for being is to be a high-volume payment network whose fees are the
 miners' natural resource, and because a soft monetary contract inspires
 neither merchants nor savers; constitutional governance nevertheless
 keeps the safety valve of activating a tail by a three-chamber vote
-should security ever require it. The initial reward is 0.098 ATU per
+should security, or the intelligence budget of the Corona, ever require
+it, and the six-month delay of the constitutional track makes that valve
+deliberate by construction. The initial reward is 0.098 ATU per
 block every two seconds: small enough to be dignified, close enough to
 reality to be honest.
 

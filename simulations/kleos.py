@@ -45,6 +45,13 @@ Attacker assumptions, deliberately maximal:
 Output: English report (console + kleos-sim-report.txt), figure
 antumbra-kleos-curves.png, exit 0 only if all invariants hold over the
 32 eras.
+
+Since the first audit, the engine also runs a seed sweep: the
+canonical seed 1618 produces the detailed report and the figure,
+and eleven more seeds replay the same two passes (v2 rules,
+then R1-R4 under the same maximum attack) with the worst case
+across seeds archived in the report. One seed is a demonstration;
+a sweep is a regression test.
 """
 import os
 import random
@@ -73,6 +80,7 @@ P_DETECT = 0.03               # detection of a fake profile per era
 ATTACK_START_ERA = 4          # the farm opens at era 4 (year 2)
 
 SEED = 1618                   # full reproducibility
+SWEEP_SEEDS = 12              # the canonical seed plus eleven more
 
 
 class Ident:
@@ -104,8 +112,8 @@ class Ident:
             (DEED_MAX - WITNESS_MIN_DEED)
 
 
-def simulate(attack=True, echo_cap=True, fixes=True):
-    rng = random.Random(SEED)
+def simulate(attack=True, echo_cap=True, fixes=True, seed=SEED):
+    rng = random.Random(seed)
     idents = []
     # Honest population: 100 miners, 60 merchants, 30 agents, 20 whales
     for _ in range(100):
@@ -211,7 +219,7 @@ def simulate(attack=True, echo_cap=True, fixes=True):
 
         cand = [(i, idents[i].kleos) for i in range(len(idents)) if eligible(i)]
         pool = list(cand)
-        rng2 = random.Random(SEED * 1000 + era)
+        rng2 = random.Random(seed * 1000 + era)
         seats = []
         for _ in range(min(SEATS, len(pool))):
             total = sum(w for _, w in pool)
@@ -273,6 +281,47 @@ def herfindahl(idents):
     cand = [x.kleos for x in idents if x.kleos >= SEAT_THRESHOLD]
     tot = sum(cand)
     return sum((k / tot) ** 2 for k in cand) if cand else 0.0
+
+
+def sweep():
+    """The seed sweep: the same two passes on twelve seeds, worst
+    case archived. One seed is a demonstration; a sweep is a
+    regression test. Every assertion here is an invariant the
+    rules must hold on every seed, not on the lucky one."""
+    need = SEATS // 2 + 1
+    rows = []
+    for k in range(SWEEP_SEEDS):
+        seed = SEED if k == 0 else k * 7 + 3
+        _, _, hV, _, first_fV, seatV, _ = simulate(attack=True,
+                                                   fixes=False, seed=seed)
+        idA, _, hA, _, first_fA, seatA, _ = simulate(attack=True,
+                                                     fixes=True, seed=seed)
+        lastA = hA[-1]
+        # The v2 flaw must reproduce on every seed: it is
+        # structural, not seed luck.
+        assert seatV[0] >= need, (f'v2 flaw did not reproduce on seed {seed}')
+        # The wall must hold on every seed: zero seats, ever.
+        assert seatA[0] == 0, (f'the attack took seats on seed {seed}')
+        assert first_fA is None, (f'a fake profile became candidate on seed {seed}')
+        assert lastA['whale_max'] < SEAT_THRESHOLD, (f'a whale crossed on seed {seed}')
+        rows.append({
+            'seed': seed,
+            'v2_seats': seatV[0], 'v2_first_fake': first_fV,
+            'seats': seatA[0],
+            'fake_med': lastA['fake_med'], 'fake_max': lastA['fake_max'],
+            'hon_med': lastA['hon_p50'],
+            'whale_max': lastA['whale_max'],
+        })
+    worst = {
+        'v2_seats': max(r['v2_seats'] for r in rows),
+        'v2_first_fake_year': min(r['v2_first_fake'] for r in rows) / 2,
+        'seats': max(r['seats'] for r in rows),
+        'fake_med': max(r['fake_med'] for r in rows),
+        'fake_max': max(r['fake_max'] for r in rows),
+        'hon_med': min(r['hon_med'] for r in rows),
+        'whale_max': max(r['whale_max'] for r in rows),
+    }
+    return rows, worst
 
 
 def report():
@@ -354,6 +403,27 @@ def report():
     add("  Echo gain per target <= 2.0, seats = 55 or fewer if scarce")
     add("  sponsorship <= 2/year/sponsor, whale never a candidate")
     add("  under R1: every candidate has Tenure >= 15 and a living Tenure: OK")
+
+    # ── pass 3: the seed sweep ──
+    rows, worst = sweep()
+    add("")
+    add(f"PASS 3: SEED SWEEP, {SWEEP_SEEDS} seeds, same maximum attack")
+    add("  seed   v2 seats  v2 first fake   R1-R4 seats   fake med  "
+        "honest med  whale")
+    for r in rows:
+        add(f"  {r['seed']:<6d} {r['v2_seats']:>4d}/55   "
+            f"year {r['v2_first_fake'] / 2:>4.1f}       "
+            f"{r['seats']:>3d}/55      "
+            f"{r['fake_med']:>6.1f}    {r['hon_med']:>6.1f}    "
+            f"{r['whale_max']:>4.1f}")
+    add("  worst case across seeds:")
+    add(f"    v2 rules: {worst['v2_seats']}/55 seats, first fake candidate "
+        f"year {worst['v2_first_fake_year']:.1f} (the flaw is structural)")
+    add(f"    R1-R4 rules: {worst['seats']}/55 seats, no fake candidate ever")
+    add(f"    worst fake median Kleos {worst['fake_med']:.1f} "
+        f"(weakest honest median {worst['hon_med']:.1f}), "
+        f"whale never above {worst['whale_max']:.1f}")
+    add("  => the wall holds on every seed, not only the canonical one")
 
     text = "\n".join(lines)
     print(text)

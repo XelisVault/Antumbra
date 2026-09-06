@@ -3,8 +3,10 @@
 \section{Introduction}\label{sec:intro}
 
 A blockchain earns its existence only by serving a structural, growing and
-badly served demand. Four currents converge in 2026 on the same point, and
-nobody occupies that point. The first is agent commerce. Coinbase revived
+badly served demand. Four currents converge in 2026 on the same point,
+and no deployed chain occupies it: the nearest neighbors, reviewed in
+Table~\ref{tab:neighbors}, each renounce at least two of its
+requirements. The first is agent commerce. Coinbase revived
 HTTP status code 402 with the x402 protocol, Stripe and Coinbase contest the
 machine-to-machine payment rails, and four rival standards share the same
 territory. All of these rails share three blind spots: they are denominated
@@ -63,6 +65,28 @@ that capital cannot fabricate. The thesis of this paper is that these
 properties reinforce one another as soon as one of them, reputation
 anchored in time, is treated as the foundation.
 
+\begin{table}[htbp]
+\centering
+\small
+\caption{The neighbors of the square, and what each renounces. The
+reference here is honest: rings and fast DAG ordering are inherited arts,
+not inventions of this paper.}
+\label{tab:neighbors}
+\begin{tabularx}{\textwidth}{@{}L{2.6cm}L{2.2cm}Y@{}}
+\toprule
+Chain & Closest strength & What it renounces of the five properties \\
+\midrule
+Monero, NERVA & the reference of private payment & speed (minutes of finality), agent identity, disclosure levels \\
+Zcash (Orchard) & readable selective disclosure & egalitarian CPU mining (Equihash ASIC territory), agent identity, speed \\
+Kaspa & fast DAG ordering at scale & privacy entirely, disclosure, reputation \\
+Xelis & encrypted amounts on a DAG & ring anonymity (no decoys), reputation, CPU-only mining \\
+Penumbra, Namada & shielded multi-asset, ZK disclosure & CPU mining, egalitarian hardware, reputation as consensus \\
+Aztec, Aleo & private general computation & every proof circuit is maximal technique and maximal audit surface; CPU mining \\
+ANTUMBRA & the five properties together & general masked contracts, honestly deferred (Section~\ref{sec:contracts}) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 The monetary and consensus numbers that recur throughout this document are
 gathered here for reference. Each is justified in the section indicated.
 
@@ -111,16 +135,22 @@ kept, proofs on demand.
   % Lumen enclosure
   \draw[rounded corners=7pt, thick, black!50]
         (-5.15,-0.78) rectangle (5.15,3.62);
-  \node[anchor=west, font=\small\itshape, text=black!60, align=left]
+  
+\node[anchor=west, font=\small\itshape, text=black!60, align=left,
+        text width=2.15cm]
         at (5.35,1.42) {Lumen: selective\\disclosure,\\on demand};
   % the four layers, top to bottom
-  \node[layer] (rep) at (0,3.1)
+  
+\node[layer] (rep) at (0,3.1)
     {\textbf{Reputation} \; Kleos: Deed 40 + Echo 30 + Tenure 30, consensus score, non-transferable};
-  \node[layer] (ide) at (0,2.06)
+  
+\node[layer] (ide) at (0,2.06)
     {\textbf{Identity} \; Embers, one per person, no biometrics \; $\cdot$ \; Ciphers, sponsored agents};
-  \node[layer] (fin) at (0,1.02)
+  
+\node[layer] (fin) at (0,1.02)
     {\textbf{Finality} \; the Ring: 55 seats drawn by Kleos, checkpoints every 4 s, quorum 37};
-  \node[layer] (set) at (-0.0,-0.02)
+  
+\node[layer] (set) at (-0.0,-0.02)
     {\textbf{Settlement} \; the Veil: CPU-mined BlockDAG, RandomX, 2 s blocks, private by default};
 \end{tikzpicture}
 \caption{The four layers of ANTUMBRA inside the Lumen, the selective
@@ -134,7 +164,10 @@ at any time. The internal names are working codenames, chosen to keep the
 document readable; they may be adapted at implementation time. Only
 ANTUMBRA and its ticker ATU are proposed as a definitive commitment,
 verified free of collision on the blockchain and crypto namespace on
-September 6, 2026.
+September 6, 2026. One layer of Table~\ref{tab:naming} sits above the
+others and outside the stack discipline: the Corona,
+Section~\ref{sec:corona}, machine governance that reads every layer and
+modifies none of them without the human chambers.
 
 \begin{table}[htbp]
 \centering
@@ -154,6 +187,8 @@ the Cipher & agent identity & sponsored by an Ember, with a revocable spending p
 Kleos & reputation & three-layer score, consensus, non-transferable, non-purchasable \\
 the Ring & finality committee & 55 high-reputation seats, checkpoints every 4 seconds \\
 RAF & finality mechanism & Reputation-Anchored Finality \\
+the Corona & machine governance & AI senators that propose, red-team and implement changes under human veto (Section~\ref{sec:corona}) \\
+the Vault & deployment custody & threshold signature of 9 hardware fragments, 7 needed, no whole key anywhere \\
 era & protocol time & six months; the unit of reputation, rotation and decay \\
 eclipse & emission time & four years, eight eras; 34 eclipses lead to the cap at year 136 \\
 Mandate & money contract & an output whose release obeys a predicate declared at creation \\
@@ -177,12 +212,17 @@ other instead of taxing each other.
 The first wager is egalitarian. RandomX, the algorithm designed so that one
 ordinary computer is one vote, produces blocks that no specialized machine
 produces better at equal cost: no dedicated circuit, no farm of graphics
-cards. Emission and block production stay within reach of anyone who owns
+cards. Miners run it in fast mode, 2,080 MiB of memory; verifying nodes may
+run light mode, 256 MiB of cache and no dataset, a size its author chose
+deliberately so that specialized hardware gains nothing by verifying: the
+light-mode memory-time product was sized to close exactly that door.
+Emission and block production stay within reach of anyone who owns
 a laptop, the ethos of NERVA carried to its conclusion. The constant
 \texttt{0x9E3779B9}, the integer truncation of the golden ratio in binary
 arithmetic, already drives the generation of RandomX superscalar programs;
 the same proportion that will distribute the currency already works inside
-the engine that will mine it.
+the engine that will mine it, a mnemonic accident the paper claims as
+identity, not as argument.
 
 The second wager is structural. A linear chain must choose between short
 blocks, which multiply orphans, and long blocks, which slow confirmation;
@@ -204,33 +244,114 @@ anticone.
 \toprule
 Parameter & Retained value & Justification \\
 \midrule
-Mining algorithm & RandomX, 4 MiB light mode & proven by years of attack; processor only, by design \\
+Mining algorithm & RandomX: fast mode 2,080 MiB, light mode 256 MiB & proven by years of attack; the light-mode cache is sized so verification resists specialization \\
 Block cadence & 2 seconds & near-immediate inclusion; the DAG absorbs the orphan rate \\
-Block ordering & fast-converging DAG (GHOSTDAG family) & security grows with block volume, not only depth \\
-Flow anonymity & ring of 16, masked amounts & three times the decoy set of current CryptoNote defaults \\
-Transport network & Dandelion++, Tor by default & IP-address analysis is the number one practical flaw of private chains \\
+Block ordering & GHOSTDAG-family coloring, cluster parameter $k = 8$ & security grows with block volume, not only depth; $k$ is calibrated for the two-second cadence \\
+Flow anonymity & ring of 16, masked amounts & equals the strongest ring deployed in the lineage (Monero since 2022); a floor to raise, not a ceiling \\
+Signature scheme & MLSAG over Ed25519, Keccak-256 & the lineage construction, implemented and cross-validated; CLSAG is the post-audit upgrade candidate \\
+Transport network & Dandelion++, Tor for transaction injection & IP-address analysis is the number one practical flaw of private chains \\
 Finality & Ring checkpoints (Section~\ref{sec:ring}) & economic irreversibility in under 6 seconds \\
-Target throughput, phase 1 & 100 to 300 transactions per second & parallelizable ring verification; adaptive size \\
-Storage & pruned DAG & a full node must fit on a personal computer \\
+Target throughput & 100 tx/s sustained, 300 tx/s burst, on the reference node & an engineering budget with a measured exit criterion (Table~\ref{tab:budget}) \\
+Storage & pruned DAG, decoy pool retained forever & the nullifier set and output keys are consensus data; the growth budget is stated in Table~\ref{tab:budget} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Pruning deserves a full sentence, because it conditions the entire social
-contract: keep of history only the recent state and the cryptographic
-proofs of the past, so that a full node stays within the bounds of a
-personal computer. A network whose nodes required a disk bay would exclude
-exactly the participants it claims to serve. Dandelion++ stem propagation
-and Tor transport close the door on IP-address analysis, which remains the
-great practical weakness of badly configured private networks:
+Pruning deserves its own paragraph, because it conditions the entire social
+contract, and in a ring chain it is not free: spent outputs remain decoys
+for everyone else's privacy, so the output keys, their commitments and the
+nullifier set are consensus data forever, roughly ninety-six bytes per
+output. What prunes is the rest: the ring signatures, the range proofs and
+the transaction bodies beyond the recent window, which no later
+verification re-reads. A network whose nodes required a disk bay would
+exclude exactly the participants it claims to serve; the growth budget of
+Table~\ref{tab:budget} keeps that promise measurable. Dandelion++ stem
+propagation and Tor transport close the door on IP-address analysis, which
+remains the great practical weakness of badly configured private networks:
 transactional privacy is nothing if the network observer knows who emitted
-what.
+what. One precision, because latency and a DAG interact: transactions are
+injected through Tor, but blocks relay node to node over the peer network
+with mandatory encryption, so the stem anonymity of a payment never slows
+the ordering of blocks that carry it, and the cluster parameter $k$ is
+calibrated against measured propagation at the two-second cadence, an exit
+criterion of the prototype phase, not an assumption.
+
+\subsection{The DAG contract, stated precisely}
+
+A specification that grafts rings onto a DAG must say exactly where the
+seams are. The rules, frozen here and implemented in the reference node:
+
+\begin{enumerate}[leftmargin=1.8em, itemsep=2pt]
+\item \textbf{Ordering.} The coloring is GHOSTDAG-family with cluster
+parameter $k = 8$: a block is blue when its anticone in the selected
+parent's past is at most $k$; the blue score accumulates, the selected
+parent maximizes it, and the consensus order is the depth-first walk of
+the selected-parent chain absorbing blue blocks, then the remaining red
+blocks in insertion order. Deterministic in the accepted set alone.
+\item \textbf{Validity resolves in consensus order, not arrival order.}
+A double spend published in parallel blocks is resolved by the order: the
+first occurrence in consensus order spends the output, every later
+occurrence is rejected at ordering time. The nullifier registry, the set
+of published key images, is keyed by this order, so two conflicting
+transactions in one anticone have exactly one winner, decided by a rule
+every node recomputes identically.
+\item \textbf{Decoys are drawn from the ordered past.} A wallet samples
+decoys only from outputs already ordered by the DAG, never from the
+anticone: an unordered output may yet be a parallel spend, and a decoy
+that could become invalid is a decoy that betrays the real signer. Age
+brackets follow the real spending distribution, the lineage's known
+discipline.
+\item \textbf{Scanning.} Every output carries a one-byte view tag derived
+from the shared secret: a wallet skips the full elliptic-curve derivation
+for the outputs the tag does not match, so scanning stays linear and
+cheap at any block cadence.
+\item \textbf{Pruning.} Output keys, commitments, encrypted amounts and
+nullifiers are retained forever; signatures, range proofs and bodies
+prune after the verification window. Archival nodes keep everything by
+choice, never by obligation.
+\end{enumerate}
+
+\subsection{The capacity budget, stated as numbers}
+
+A private network that claims a throughput must show its arithmetic,
+because privacy is precisely what makes verification expensive. The
+reference node is a 2020-class desktop, four cores and eight gibibytes.
+One standard transfer, two inputs and two outputs at ring sixteen,
+verifies in about ten milliseconds of single-core work, dominated by the
+MLSAG chains and the aggregated range proof; four cores therefore clear
+on the order of four hundred transactions per second of pure
+verification, before memory and bandwidth contend. The budget below is
+the honest form of the claim: targets are what the exit criteria measure
+on the prototype network, and the sustained expectation of a payment
+network of this size is five to twenty transactions per second for the
+first years; the hundred is headroom against spikes, not a promise of
+volume.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The capacity budget of the reference node (4 cores, 8 GiB),
+and what each target commits to.}
+\label{tab:budget}
+\begin{tabularx}{\textwidth}{@{}L{4.3cm}L{4.3cm}Y@{}}
+\toprule
+Resource & Budget & Consequence \\\midrule
+Verification & $\sim$10 ms per tx, single core; 4 cores in parallel & the phase-1 exit criterion: 100 tx/s sustained for 24 h on the reference node \\
+Bandwidth & $\sim$1.5 kB per tx, $\sim$1.5 Mbit/s sustained; 4.5 Mbit/s at burst & fits any residential connection; measured on the prototype, not asserted \\
+Decoy pool growth & $\sim$192 B per tx: 56 GiB per year at 10 tx/s, 564 GiB if 100 tx/s were held for a year & the ceiling is burst capacity, not a promise; at the sustained expectation a one-terabyte disk holds the pool for a decade \\
+Pruned node body & signatures and proofs beyond the window pruned & the 1 TiB disk also holds the recent bodies with ample margin \\
+Burst ceiling & 300 tx/s for minutes on 8-core hardware & validated on the test network before phase five, or the sustained target drops \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 One honest word to close the section: grafting a fast-converging DAG onto
 a CryptoNote base is a real engineering challenge, work of substance and
 not a configuration flag. The roadmap (Section~\ref{sec:roadmap}) treats
 it as the first technical risk of the project, with an isolated prototype
-and a dedicated audit before any main network. The specification is
-precise, the literature is public and solid, and none of the primitives
+and a dedicated audit before any main network. The rules above make the
+seam precise: cluster parameter, order resolution, decoy sampling,
+scanning and pruning are stated, implemented and cross-validated, the
+literature is public and solid, and none of the primitives
 used is exotic: the risk is a degree of difficulty, not a degree of
 uncertainty.

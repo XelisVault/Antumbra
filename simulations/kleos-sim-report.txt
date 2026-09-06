@@ -43,3 +43,23 @@ INVARIANTS VERIFIED AT EVERY ERA (assertions, 3 passes x 32 eras):
   Echo gain per target <= 2.0, seats = 55 or fewer if scarce
   sponsorship <= 2/year/sponsor, whale never a candidate
   under R1: every candidate has Tenure >= 15 and a living Tenure: OK
+
+PASS 3: SEED SWEEP, 12 seeds, same maximum attack
+  seed   v2 seats  v2 first fake   R1-R4 seats   fake med  honest med  whale
+  1618     55/55   year  8.5         0/55        11.9      76.5    30.0
+  10       55/55   year  8.5         0/55        11.7      76.6    30.0
+  17       55/55   year  8.5         0/55        13.2      76.5    30.0
+  24       55/55   year  8.5         0/55        13.4      76.5    30.0
+  31       55/55   year  8.5         0/55        11.7      76.5    30.0
+  38       55/55   year  8.5         0/55        13.4      76.5    30.0
+  45       55/55   year  8.5         0/55        13.1      76.5    30.0
+  52       55/55   year  8.5         0/55        11.7      76.5    30.0
+  59       55/55   year  8.5         0/55        12.2      76.5    30.0
+  66       55/55   year  8.5         0/55        12.6      76.5    30.0
+  73       55/55   year  8.5         0/55        12.6      76.5    30.0
+  80       55/55   year  8.5         0/55        13.2      76.5    30.0
+  worst case across seeds:
+    v2 rules: 55/55 seats, first fake candidate year 8.5 (the flaw is structural)
+    R1-R4 rules: 0/55 seats, no fake candidate ever
+    worst fake median Kleos 13.4 (weakest honest median 76.5), whale never above 30.0
+  => the wall holds on every seed, not only the canonical one

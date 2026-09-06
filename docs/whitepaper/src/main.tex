@@ -35,7 +35,7 @@
   pdftitle={ANTUMBRA: A Reputation-Anchored Settlement Network for the Human-Machine Economy},
   pdfauthor={XelisVault},
   pdfsubject={Blockchain protocol specification},
-  pdfkeywords={ANTUMBRA, ATU, blockchain, privacy, reputation, BlockDAG, RandomX, CryptoNote}
+  pdfkeywords={ANTUMBRA, ATU, blockchain, privacy, reputation, BlockDAG, RandomX, CryptoNote, AI governance}
 }
 
 \begin{document}
@@ -46,7 +46,7 @@
   {\large A Reputation-Anchored Settlement Network\\for the Human-Machine Economy}\\[9pt]
   {\normalsize XelisVault}\\[2pt]
   {\small\ttfamily xelisvault.xyz \; $\cdot$ \; github.com/XelisVault/Antumbra}\\[2pt]
-  {\small Version 1.1, September 2026}
+  {\small Version 1.2, September 2026}
 \end{center}
 
 \vspace{10pt}
@@ -60,18 +60,26 @@ over rails built on fully transparent stablecoins; those rails say nothing
 about whether an agent is reliable, who answers for it, or where its budget
 ends. Dominant proofs of humanity engrave body data into global registries,
 and the coins that are actually private remain slow or unreadable to
-regulators. ANTUMBRA occupies that empty square. It couples a CPU-mined
+regulators. ANTUMBRA aims at that square: no deployed chain combines the
+five properties it requires, and each of the nearest neighbors renounces
+at least two. It couples a CPU-mined
 BlockDAG with two-second blocks and private-by-default transactions, a
 finality committee of fifty-five seats drawn by reputation rather than
 capital, non-biometric human identities, agents that are accountable by
 construction, and a native three-level disclosure mechanism. The scarce
 resource the network mints is consensus reputation, Kleos: three layers of
-which the heaviest is time itself, which cannot be bought. The money supply
+which the heaviest is time itself, which cannot be bought. Above the whole,
+a machine governance layer, the Corona, lets AI senators propose, red-team
+and implement protocol changes under human veto, paid like miners for
+useful work and ruined like miners for attacks. The money supply
 is capped at 16,180,339 ATU, the golden ratio scaled by ten million, issued
 over thirty-four four-year eclipses and closed exactly at year 136. The
 specification was attacked by its own deterministic simulation before being
 written down as final: one flaw was found and four corrective rules closed
-it. This document is the public reference specification for the network.
+it, the engine is public code, and the rules hold on a sweep of twelve
+seeds. A first external audit of version 1.1 returned twelve findings; this
+version closes them. This document is the public reference specification
+for the network.
 \end{abstract}
 
 \vspace{4pt}
@@ -82,6 +90,7 @@ it. This document is the public reference specification for the network.
 \input{sec-tx}
 \input{sec-identity}
 \input{sec-gov}
+\input{sec-corona}
 \input{sec-close}
 
 \end{document}
