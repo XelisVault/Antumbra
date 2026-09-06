@@ -33,6 +33,19 @@ pub fn hash_to_scalar(data: &[u8]) -> Scalar {
     Scalar(DalekScalar::from_bytes_mod_order(digest))
 }
 
+/// Hs over the concatenation of the parts, streamed without
+/// allocation. Crate-internal: the ring challenge and the nonce
+/// derivation hash multi-part inputs.
+pub(crate) fn hash_to_scalar_parts(parts: &[&[u8]]) -> Scalar {
+    let mut keccak = Keccak::v256();
+    for part in parts {
+        keccak.update(part);
+    }
+    let mut digest = [0u8; 32];
+    keccak.finalize(&mut digest);
+    Scalar(DalekScalar::from_bytes_mod_order(digest))
+}
+
 /// The highest hash-to-point counter, inclusive. An input that needs
 /// more than 256 rounds does not exist with a probability above
 /// one minus two to the minus two thousand.

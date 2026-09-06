@@ -88,6 +88,41 @@ class Lcg:
         return self.next_below(L - 1) + 1
 
 
+# --- Canonical varints (mirrors of the primitives rules) --------
+
+def write_varint(value: int) -> bytes:
+    out = bytearray()
+    while True:
+        byte = value & 0x7F
+        value >>= 7
+        if value == 0:
+            out.append(byte)
+            return bytes(out)
+        out.append(byte | 0x80)
+
+
+def read_varint(data: bytes, pos: int) -> tuple[int, int]:
+    """Strict reader: mirrors the Rust rules exactly."""
+    value = 0
+    for i in range(10):
+        if pos + i >= len(data):
+            raise ValueError("varint truncated")
+        byte = data[pos + i]
+        payload = byte & 0x7F
+        terminates = byte & 0x80 == 0
+        if i == 9:
+            # The tenth byte exists only to carry the final bit.
+            if payload != 1 or not terminates:
+                raise ValueError("varint too wide")
+            return value | (1 << 63), 10
+        value |= payload << (7 * i)
+        if terminates:
+            if payload == 0 and i > 0:
+                raise ValueError("non canonical varint")
+            return value, i + 1
+    raise ValueError("unreachable")
+
+
 # --- Keccak-256 (pycryptodome) -------------------------------------
 
 def keccak256(data: bytes) -> bytes:
@@ -274,6 +309,103 @@ def key_image(one_time_secret_value: int, one_time_public):
     return scalar_mult(one_time_secret_value, hashed)
 
 
+# --- The MLSAG ring signature (from spec, ADR-012) -----------------
+
+MLSAG_DOMAIN = b"ANTUMBRA/veil/mlsag"
+MIN_RING_SIZE = 2
+MAX_RING_SIZE = 1024
+
+
+def ring_challenge(message: bytes, left, right) -> int:
+    """Hs of the domain tag, the message, and the two step points."""
+    return hash_to_scalar(MLSAG_DOMAIN + message + compress(left) + compress(right))
+
+
+def derive_nonce(seed: bytes, label: int, index: int) -> int:
+    """Hs(seed, label, index), the index in four LE bytes."""
+    data = seed + bytes([label]) + (index & 0xFFFFFFFF).to_bytes(4, "little")
+    return hash_to_scalar(data)
+
+
+def ring_sign(message: bytes, ring, real_index: int, secret: int, nonce_seed: bytes):
+    """MLSAG: returns (image, first challenge, member scalars)."""
+    n = len(ring)
+    image = key_image(secret, ring[real_index])
+    alpha = derive_nonce(nonce_seed, 0x00, real_index)
+    challenges = [0] * n
+    members = [0] * n
+    real_hashed, _ = hash_to_point(compress(ring[real_index]))
+    first = (real_index + 1) % n
+    challenges[first] = ring_challenge(
+        message, scalar_mult(alpha, G), scalar_mult(alpha, real_hashed)
+    )
+    next_index = first
+    while next_index != real_index:
+        s = derive_nonce(nonce_seed, 0x01, next_index)
+        c = challenges[next_index]
+        left = edwards_add(scalar_mult(s, G), scalar_mult(c, ring[next_index]))
+        hashed, _ = hash_to_point(compress(ring[next_index]))
+        right = edwards_add(scalar_mult(s, hashed), scalar_mult(c, image))
+        members[next_index] = s
+        following = (next_index + 1) % n
+        challenges[following] = ring_challenge(message, left, right)
+        next_index = following
+    # The ring closes on the real member: s = alpha - c p.
+    members[real_index] = (alpha - challenges[real_index] * secret) % L
+    return image, challenges[0], members
+
+
+def ring_verify(message: bytes, ring, image, first_challenge: int, members) -> bool:
+    """The verifier recomputes the whole chain and checks c_n = c_0."""
+    n = len(ring)
+    if len(members) != n:
+        return False
+    c = first_challenge
+    for i in range(n):
+        s = members[i]
+        hashed, _ = hash_to_point(compress(ring[i]))
+        left = edwards_add(scalar_mult(s, G), scalar_mult(c, ring[i]))
+        right = edwards_add(scalar_mult(s, hashed), scalar_mult(c, image))
+        c = ring_challenge(message, left, right)
+    return c == first_challenge
+
+
+def encode_signature(image, first_challenge: int, members) -> bytes:
+    """The canonical encoding of ADR-012, rule 5."""
+    out = bytearray()
+    out += compress(image)
+    out += first_challenge.to_bytes(32, "little")
+    out += write_varint(len(members))
+    for s in members:
+        out += s.to_bytes(32, "little")
+    return bytes(out)
+
+
+def decode_signature(encoded: bytes):
+    """The strict mirror of the Rust decoder."""
+    if len(encoded) < 65:
+        raise ValueError("too short")
+    image = decompress(bytes(encoded[0:32]))
+    if image is None or compress(image) != encoded[0:32]:
+        raise ValueError("image not canonical")
+    first_challenge = int.from_bytes(encoded[32:64], "little")
+    if not 0 < first_challenge < L:
+        raise ValueError("challenge not canonical")
+    count, used = read_varint(encoded, 64)
+    if not MIN_RING_SIZE <= count <= MAX_RING_SIZE:
+        raise ValueError("count out of bounds")
+    position = 64 + used
+    if len(encoded) != position + count * 32:
+        raise ValueError("length mismatch")
+    members = []
+    for i in range(count):
+        value = int.from_bytes(encoded[position + i * 32:position + (i + 1) * 32], "little")
+        if not 0 < value < L:
+            raise ValueError("member not canonical")
+        members.append(value)
+    return image, first_challenge, members
+
+
 def public_of(scalar: int):
     return scalar_mult(scalar, G)
 
@@ -344,6 +476,24 @@ def self_check() -> None:
     assert point == again and rounds == rounds_again
     assert scalar_mult(L, point) == IDENTITY
     assert point != IDENTITY
+
+    # The MLSAG chain on a small ring: sign, verify, tamper.
+    ring = [public_of(7), public_of(11), public_of(13)]
+    secret = 11
+    image, c0, members = ring_sign(b"self-check", ring, 1, secret, bytes([3] * 32))
+    assert ring_verify(b"self-check", ring, image, c0, members)
+    assert not ring_verify(b"self-checkx", ring, image, c0, members)
+    assert not ring_verify(
+        b"self-check", ring, image, (c0 + 1) % L, members
+    )
+    tampered = list(members)
+    tampered[2] = (tampered[2] + 1) % L
+    assert not ring_verify(b"self-check", ring, image, c0, tampered)
+    # The image is the key image of the real member.
+    assert image == key_image(secret, ring[1])
+    # The encoding roundtrips.
+    decoded = decode_signature(encode_signature(image, c0, members))
+    assert decoded == (image, c0, members)
 
 
 # --- Vector construction -------------------------------------------
@@ -546,6 +696,99 @@ def build_key_image_vectors(rng: Lcg, onetime_vectors: list) -> list:
     return vectors
 
 
+def build_ring_vectors(rng: Lcg) -> list:
+    """MLSAG signatures over rings of several sizes and real
+    indices, with the linkability pair and a tamper case. The real
+    member is a one-time output the wallet of the seed owns, the
+    decoys are other wallets' keys. The vector at order 4 spends the
+    same output as the vector at order 0, in a different ring: the
+    key image must repeat, everything else differs."""
+    vectors = []
+    link_secret = None
+    link_real_point = None
+    for order, (size, real_index) in enumerate(
+        [(2, 0), (2, 1), (3, 1), (16, 7), (16, 11), (32, 31)]
+    ):
+        seed = rng.bytes(32)
+        a = clamped_reduced(view_seed(seed))
+        b = clamped_reduced(seed)
+        a_public = public_of(a)
+        b_public = public_of(b)
+
+        # The real output: a one-time address the wallet owns, with
+        # its ephemeral R kept for the secret derivation.
+        r = rng.scalar()
+        shared = shared_secret(r, a_public)
+        real_point = one_time_address(shared, b_public)
+        r_public = public_of(r)
+        secret = one_time_secret(shared_secret(a, r_public), b)
+
+        if order == 0:
+            link_secret = secret
+            link_real_point = real_point
+        elif order == 4:
+            # The linkability pair: the same output, a different
+            # ring, a different nonce.
+            secret = link_secret
+            real_point = link_real_point
+
+        # The decoys: other wallets' one-time keys.
+        ring = []
+        for i in range(size):
+            if i == real_index:
+                ring.append(real_point)
+            else:
+                ring.append(public_of(rng.scalar()))
+
+        # The structural rules: distinct members, strict decoding.
+        encodings = [compress(p) for p in ring]
+        assert len(set(encodings)) == size
+        for point in ring:
+            assert decode_point(compress(point)) == point
+
+        message = b"ANTUMBRA/veil/test/payment"
+        nonce_seed = rng.bytes(32)
+        image, first_challenge, members = ring_sign(
+            message, ring, real_index, secret, nonce_seed
+        )
+
+        # The self-checks: the signature verifies, the tampered
+        # member fails, the wrong message fails, the encoding
+        # roundtrips strictly.
+        assert ring_verify(message, ring, image, first_challenge, members)
+        assert not ring_verify(b"other", ring, image, first_challenge, members)
+        tampered_members = list(members)
+        tampered_members[0] = members[0] // 2 if members[0] > 2 else 1
+        assert not ring_verify(
+            message, ring, image, first_challenge, tampered_members
+        )
+        encoded = encode_signature(image, first_challenge, members)
+        decoded = decode_signature(encoded)
+        assert decoded == (image, first_challenge, members)
+
+        vector = {
+            "message": message.hex(),
+            "ring": [point_hex(p) for p in ring],
+            "real_index": real_index,
+            "secret": scalar_hex(secret),
+            "nonce_seed": nonce_seed.hex(),
+            "image": point_hex(image),
+            "first_challenge": scalar_hex(first_challenge),
+            "members": [scalar_hex(s) for s in members],
+            "encoding": encoded.hex(),
+            "tampered_member0": scalar_hex(tampered_members[0]),
+        }
+        vectors.append(vector)
+
+    # The linkability pair: vectors 0 and 4 spend the same output in
+    # different rings, the key images are identical.
+    assert vectors[4]["secret"] == vectors[0]["secret"]
+    assert vectors[4]["image"] == vectors[0]["image"]
+    assert vectors[4]["ring"] != vectors[0]["ring"]
+    assert vectors[4]["encoding"] != vectors[0]["encoding"]
+    return vectors
+
+
 def build_invalid_vectors() -> tuple:
     # Points: the identity, the order 2 point, a non-canonical y at
     # 2^255 - 1, and a y below the prime that admits no x (searched
@@ -594,6 +837,7 @@ def main() -> int:
     onetime_vectors = build_onetime_vectors(rng)
     commitment_vectors, homomorphic = build_commitment_vectors(rng, generator_point)
     key_image_vectors = build_key_image_vectors(rng, onetime_vectors)
+    ring_vectors = build_ring_vectors(rng)
     invalid_points, invalid_scalars = build_invalid_vectors()
 
     vectors = {
@@ -610,6 +854,7 @@ def main() -> int:
         "commitment": commitment_vectors,
         "homomorphism": homomorphic,
         "key_image": key_image_vectors,
+        "ring": ring_vectors,
         "invalid_point": invalid_points,
         "invalid_scalar": invalid_scalars,
     }
@@ -619,6 +864,7 @@ def main() -> int:
     print(f"OK: {len(scalar_vectors)} scalar, {len(hash_scalar_vectors)} Hs, "
           f"{len(hash_point_vectors)} Hp, {len(onetime_vectors)} one-time, "
           f"{len(commitment_vectors)} commitment, {len(key_image_vectors)} key image, "
+          f"{len(ring_vectors)} ring, "
           f"{len(invalid_points) + len(invalid_scalars)} invalid vectors written to {OUTPUT}")
     return 0
 

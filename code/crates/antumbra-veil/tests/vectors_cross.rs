@@ -19,6 +19,7 @@ use antumbra_veil::error::VeilError;
 use antumbra_veil::hash::{hash_to_point, hash_to_scalar};
 use antumbra_veil::keyimage::{key_image, owned_secret};
 use antumbra_veil::onetime::{ephemeral, one_time_address, shared_secret};
+use antumbra_veil::ring::{self, RingSignature};
 use antumbra_veil::seed::{rfc8032_clamped_bytes, spend_scalar, view_scalar};
 use serde::Deserialize;
 
@@ -34,6 +35,7 @@ struct Vectors {
     commitment: Vec<CommitmentVector>,
     homomorphism: HomomorphismVector,
     key_image: Vec<KeyImageVector>,
+    ring: Vec<RingVector>,
     invalid_point: Vec<InvalidVector>,
     invalid_scalar: Vec<InvalidVector>,
 }
@@ -104,6 +106,20 @@ struct KeyImageVector {
     secret: String,
     public: String,
     image: String,
+}
+
+#[derive(Deserialize)]
+struct RingVector {
+    message: String,
+    ring: Vec<String>,
+    real_index: usize,
+    secret: String,
+    nonce_seed: String,
+    image: String,
+    first_challenge: String,
+    members: Vec<String>,
+    encoding: String,
+    tampered_member0: String,
 }
 
 #[derive(Deserialize)]
@@ -305,6 +321,71 @@ fn key_images_match_the_independent_implementation() {
         .collect::<Vec<_>>();
     images.dedup();
     assert_eq!(images.len(), same_secret.len());
+}
+
+#[test]
+fn ring_signatures_match_the_independent_implementation() {
+    let vectors = load().ring;
+    for v in &vectors {
+        let message = unhex(&v.message);
+        let ring: Vec<Point> = v.ring.iter().map(|p| decode_point(p)).collect();
+        let secret = decode_scalar(&v.secret);
+        let nonce_seed = unhex32(&v.nonce_seed);
+
+        // The independent Python implementation signs; the Rust one
+        // must produce the identical signature, field by field and
+        // byte for byte.
+        let signature = ring::sign(&message, &ring, v.real_index, &secret, &nonce_seed)
+            .unwrap_or_else(|e| panic!("signs: {e}"));
+        assert_eq!(hex(&signature.image().encode()), v.image);
+        assert_eq!(
+            hex(&signature.first_challenge().encode()),
+            v.first_challenge
+        );
+        assert_eq!(signature.members().len(), v.members.len());
+        for (rust, python) in signature.members().iter().zip(&v.members) {
+            assert_eq!(hex(&rust.encode()), *python);
+        }
+        assert_eq!(hex(&signature.encode()), v.encoding);
+
+        // The signature verifies, and the archived encoding decodes
+        // back to the same structure.
+        assert!(ring::verify(&message, &ring, &signature));
+        let decoded = RingSignature::decode(&unhex(&v.encoding))
+            .unwrap_or_else(|e| panic!("archived signature decodes: {e}"));
+        assert_eq!(decoded, signature);
+
+        // The tampered member, as archived by the generator, fails
+        // verification: replace the first member scalar inside the
+        // encoding and decode the tampered form.
+        let tampered_scalar = decode_scalar(&v.tampered_member0);
+        let mut tampered_encoding = unhex(&v.encoding);
+        // The layout: 32 bytes image, 32 bytes challenge, one varint
+        // byte for ring sizes below 128, then the member scalars.
+        let first_member_offset = 65;
+        tampered_encoding[first_member_offset..first_member_offset + 32]
+            .copy_from_slice(&tampered_scalar.encode());
+        let tampered = RingSignature::decode(&tampered_encoding).expect("tampered form decodes");
+        assert!(!ring::verify(&message, &ring, &tampered));
+
+        // A wrong message fails.
+        assert!(!ring::verify(b"other", &ring, &signature));
+    }
+
+    // The linkability pair: two vectors share the secret and the
+    // image across different rings.
+    assert!(vectors.len() >= 2);
+    let pair: Vec<&RingVector> = vectors
+        .iter()
+        .filter(|v| v.secret == vectors[0].secret)
+        .collect();
+    assert_eq!(pair.len(), 2);
+    assert_eq!(pair[0].image, pair[1].image);
+    assert_ne!(pair[0].encoding, pair[1].encoding);
+    assert_ne!(pair[0].ring, pair[1].ring);
+
+    // The protocol ring of sixteen is covered.
+    assert!(vectors.iter().any(|v| v.ring.len() == 16));
 }
 
 #[test]

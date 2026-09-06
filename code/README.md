@@ -15,7 +15,7 @@ code/
     antumbra-primitives/      hashes, canonical encoding, keys, addresses
     antumbra-tx/              version 1 transactions: fees, canonical hashing
     antumbra-veil/            the private sphere: one-time addresses,
-                              commitments, key images
+                              commitments, key images, ring signatures
   scripts/
     gen_vectors.py            the independent (Python) implementation
                               that generates the primitives cross vectors
@@ -80,10 +80,11 @@ torsion attack class on key images in a single rule.
 | `onetime` | the shared secret Hs(rA) = Hs(aR), the one-time address P = Hs(rA) G + B, wallet scanning |
 | `commitment` | the value generator H (a NUMS point), Pedersen commitments C = vH + bG |
 | `keyimage` | the one-time secret key p = Hs(aR) + b, the key image I = p Hp(P) |
+| `ring` | the MLSAG linkable ring signature over the ring of sixteen (ADR-012) |
 
-The ring signature and the range proof arrive in later milestones
-and reuse this crate unchanged: they consume the points, scalars,
-hashes and commitments defined here.
+The range proof arrives in a later milestone and reuses this crate
+unchanged: it consumes the points, scalars, hashes and commitments
+defined here.
 
 ## Building and testing
 

@@ -1,14 +1,19 @@
 //! Errors of the Veil cryptographic core.
 //!
 //! One enum for the whole crate: every rejection carries the
-//! offending 32 bytes so that a decoder fault names its input, never
-//! a bare boolean. The exhaustion error of the hash to point is
-//! reachable with a probability below two to the minus two hundred
-//! and is still handled: no path of this crate panics.
+//! offending value so that a decoder fault names its input, never a
+//! bare boolean. Structural rejections of the ring signature carry
+//! the size or the index at fault. The exhaustion error of the hash
+//! to point is reachable with a probability below two to the minus
+//! two hundred and is still handled: no path of this crate panics.
+
+use antumbra_primitives::DecodeError;
 
 /// Every way the Veil core can fail.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum VeilError {
+    /// The bytes are not a decodable canonical structure.
+    Decode(DecodeError),
     /// The 32 bytes are not a canonical point encoding: the
     /// recompression of the decoded point differs from the input.
     NonCanonicalPoint([u8; 32]),
@@ -23,6 +28,18 @@ pub enum VeilError {
     /// The 32 bytes are not a canonical scalar: the value is zero or
     /// at least the group order.
     NonCanonicalScalar([u8; 32]),
+    /// A ring size outside the accepted bounds (ADR-012).
+    RingSize(u64),
+    /// Two members of a ring are the same key: the anonymity set
+    /// collapses, and no encoder ever produces it.
+    DuplicateMember,
+    /// The real index of a signature lies outside its ring.
+    Index {
+        /// The offending index.
+        index: usize,
+        /// The length of the ring.
+        len: usize,
+    },
     /// The hash to point exhausted its 256 rounds. Probability
     /// below 2^-2040; the decoder still refuses to panic.
     HashToPointExhausted,
@@ -55,6 +72,12 @@ impl core::fmt::Display for VeilError {
                     hex(bytes)
                 )
             }
+            Self::Decode(e) => write!(f, "canonical decoding failed: {e}"),
+            Self::RingSize(n) => write!(f, "ring size {n} is outside the accepted bounds"),
+            Self::DuplicateMember => write!(f, "two ring members are the same key"),
+            Self::Index { index, len } => {
+                write!(f, "real index {index} is outside the ring of {len} members")
+            }
             Self::HashToPointExhausted => {
                 write!(f, "the hash to point exhausted its 256 rounds")
             }
@@ -63,3 +86,9 @@ impl core::fmt::Display for VeilError {
 }
 
 impl std::error::Error for VeilError {}
+
+impl From<DecodeError> for VeilError {
+    fn from(e: DecodeError) -> Self {
+        Self::Decode(e)
+    }
+}

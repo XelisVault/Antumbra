@@ -4,9 +4,10 @@
 //! Four constructions of the whitepaper live here, each a named,
 //! cross-validated routine with one encoding and one error surface:
 //! the one-time destination addresses, the deterministic shared
-//! secret, the Pedersen commitments and the key images. The ring
-//! signature and the range proof of version 2 transactions arrive in
-//! later milestones and reuse this crate unchanged.
+//! secret, the Pedersen commitments, the key images, and the MLSAG
+//! linkable ring signature that spends an output inside a ring of
+//! sixteen without saying which member is real. The range proof
+//! arrives in a later milestone and reuses this crate unchanged.
 //!
 //! The same three rules as the primitives and transaction crates
 //! apply:
@@ -34,6 +35,7 @@ pub mod error;
 pub mod hash;
 pub mod keyimage;
 pub mod onetime;
+pub mod ring;
 pub mod seed;
 
 pub use commitment::{commit, value_generator, VALUE_GENERATOR_DOMAIN};
@@ -42,4 +44,5 @@ pub use error::VeilError;
 pub use hash::{hash_to_point, hash_to_scalar, HASH_TO_POINT_ROUNDS};
 pub use keyimage::{key_image, one_time_secret, owned_secret};
 pub use onetime::{ephemeral, is_ours, one_time_address, shared_secret};
+pub use ring::{verify, RingSignature, MAX_RING_SIZE, MIN_RING_SIZE, MLSAG_DOMAIN};
 pub use seed::{clamped_scalar, rfc8032_clamped_bytes, spend_scalar, view_scalar};
