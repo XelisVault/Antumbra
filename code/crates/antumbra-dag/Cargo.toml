@@ -1,0 +1,25 @@
+# The ordering layer: the BlockDAG (ADR-013).
+#
+# The block container (canonical encoding, block id, structural
+# limits, sorted rules) is final; the proof-of-work function is the
+# development scaffold (Keccak-256 leading bits) that RandomX
+# replaces on mainnet without moving the container. Every
+# output-producing routine is cross-validated against an
+# independent implementation (code/scripts/gen_dag_vectors.py)
+# over an archived vector set (tests/vectors.json).
+
+[package]
+name = "antumbra-dag"
+description = "ANTUMBRA ordering layer: the BlockDAG, header container, work scaffold, consensus order"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

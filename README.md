@@ -47,12 +47,13 @@ next to the PDF and is revised like code.
 
 ```
 docs/whitepaper/   the whitepaper v1.1 (PDF, 20 pages) and its LaTeX source
-spec/adr/          the architecture decisions (ADR 000 to 012)
+spec/adr/          the architecture decisions (ADR 000 to 013)
 simulations/       the deterministic simulator of the social core (Kleos)
 code/              the Rust workspace of the node (primitives, version 1
-                   transactions and the Veil cryptographic core with its
-                   ring signature built and cross-validated; the remaining
-                   crates follow the roadmap order)
+                   transactions, the Veil cryptographic core with its
+                   ring signature, and the BlockDAG ordering layer with
+                   its consensus order; the remaining crates follow the
+                   roadmap order)
 ```
 
 The simulator in `simulations/` replays sixteen years of network

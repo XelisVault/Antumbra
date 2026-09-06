@@ -16,6 +16,8 @@ code/
     antumbra-tx/              version 1 transactions: fees, canonical hashing
     antumbra-veil/            the private sphere: one-time addresses,
                               commitments, key images, ring signatures
+    antumbra-dag/             the ordering layer: the BlockDAG, headers,
+                              the work scaffold, the consensus order
   scripts/
     gen_vectors.py            the independent (Python) implementation
                               that generates the primitives cross vectors
@@ -23,15 +25,16 @@ code/
                               that generates the transaction cross vectors
     gen_veil_vectors.py       the independent (Python) implementation
                               that generates the Veil core cross vectors
+    gen_dag_vectors.py        the independent (Python) implementation
+                              that generates the ordering layer cross vectors
     requirements.txt          the Python dependencies of the generators
 ```
 
-Crates to come, in milestone order: `antumbra-dag` (the BlockDAG
-ordering layer), `antumbra-ring` (checkpoints and finality),
-`antumbra-kleos` (reputation), `antumbra-identities` (Ember and
-Cipher), `antumbra-lumen` (viewing keys), `antumbra-mandates`
-(predicate outputs) and the `antumbra-node` binary that assembles
-them.
+Crates to come, in milestone order: `antumbra-ring` (checkpoints
+and finality), `antumbra-kleos` (reputation), `antumbra-identities`
+(Ember and Cipher), `antumbra-lumen` (viewing keys),
+`antumbra-mandates` (predicate outputs) and the `antumbra-node`
+binary that assembles them.
 
 ## The primitives crate
 
@@ -86,6 +89,30 @@ The range proof arrives in a later milestone and reuses this crate
 unchanged: it consumes the points, scalars, hashes and commitments
 defined here.
 
+## The ordering layer crate
+
+The BlockDAG of ADR-001 as ADR-013 specifies it exactly: a final
+block container (canonical header encoding, block id, structural
+limits, sorted parents, sorted transaction ids, payload root)
+around a development scaffold for the work function (Keccak-256
+leading bits; RandomX replaces the function on mainnet without
+moving the container). The coloring and the order are the
+normative, closure-based reference: blue set, blue score, selected
+parent and the append-only consensus order, all deterministic in
+the accepted set alone:
+
+| Module | Contents |
+|---|---|
+| `header` | the final header container: canonical encoding, block id, sorted parents, height, timestamp, nonce, payload root |
+| `block` | the header plus the ordered transaction ids, the payload root commitment, strict decoding |
+| `pow` | the work scaffold: leading zero bits, the difficulty check, the deterministic mining walk |
+| `dag` | the store: insertion rule battery, the coloring (K-cluster), the selected parent, tips, the consensus order |
+| `error` | one enum for every rejection, each carrying the offending value |
+
+The ledger rules (existence, unspentness, double-spend resolution
+by order) consume the consensus order and live in the state layer,
+a later milestone.
+
 ## Building and testing
 
 ```bash
@@ -107,7 +134,8 @@ Rust, once independently in `scripts/` (pycryptodome for Keccak-256,
 SHA-512 and the Ed25519 reference keys, from-spec reimplementations
 for the encodings and the whole Edwards25519 group of the Veil).
 `gen_vectors.py` covers the primitives, `gen_tx_vectors.py` the
-transaction layer, `gen_veil_vectors.py` the Veil core; each writes
+transaction layer, `gen_veil_vectors.py` the Veil core,
+`gen_dag_vectors.py` the ordering layer; each writes
 an archived vector set to the `tests/vectors.json` of its crate, and
 each Rust test suite must reproduce all of it bit for bit. To
 regenerate:
@@ -117,6 +145,7 @@ pip install -r scripts/requirements.txt
 python3 scripts/gen_vectors.py
 python3 scripts/gen_tx_vectors.py
 python3 scripts/gen_veil_vectors.py
+python3 scripts/gen_dag_vectors.py
 ```
 
 The generators verify their own output before writing it (strict

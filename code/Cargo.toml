@@ -11,6 +11,7 @@ members = [
     "crates/antumbra-primitives",
     "crates/antumbra-tx",
     "crates/antumbra-veil",
+    "crates/antumbra-dag",
 ]
 
 [workspace.package]
