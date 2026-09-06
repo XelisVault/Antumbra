@@ -47,7 +47,7 @@ next to the PDF and is revised like code.
 
 ```
 docs/whitepaper/   the whitepaper v1.1 (PDF, 20 pages) and its LaTeX source
-spec/adr/          the architecture decisions (ADR 000 to 013)
+spec/adr/          the architecture decisions (ADR 000 to 014)
 simulations/       the deterministic simulator of the social core (Kleos)
 code/              the Rust workspace of the node (primitives, version 1
                    transactions, the Veil cryptographic core with its

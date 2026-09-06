@@ -18,6 +18,8 @@ code/
                               commitments, key images, ring signatures
     antumbra-dag/             the ordering layer: the BlockDAG, headers,
                               the work scaffold, the consensus order
+    antumbra-ring/            the finality layer: checkpoint messages,
+                              seat signatures, quorum, stripping evidence
   scripts/
     gen_vectors.py            the independent (Python) implementation
                               that generates the primitives cross vectors
@@ -27,14 +29,15 @@ code/
                               that generates the Veil core cross vectors
     gen_dag_vectors.py        the independent (Python) implementation
                               that generates the ordering layer cross vectors
+    gen_ring_vectors.py       the independent (Python) implementation
+                              that generates the finality layer cross vectors
     requirements.txt          the Python dependencies of the generators
 ```
 
-Crates to come, in milestone order: `antumbra-ring` (checkpoints
-and finality), `antumbra-kleos` (reputation), `antumbra-identities`
-(Ember and Cipher), `antumbra-lumen` (viewing keys),
-`antumbra-mandates` (predicate outputs) and the `antumbra-node`
-binary that assembles them.
+Crates to come, in milestone order: `antumbra-kleos` (reputation),
+`antumbra-identities` (Ember and Cipher), `antumbra-lumen`
+(viewing keys), `antumbra-mandates` (predicate outputs) and the
+`antumbra-node` binary that assembles them.
 
 ## The primitives crate
 
@@ -113,6 +116,27 @@ The ledger rules (existence, unspentness, double-spend resolution
 by order) consume the consensus order and live in the state layer,
 a later milestone.
 
+## The finality layer crate
+
+The Ring of ADR-002 as ADR-014 specifies it exactly: the final
+containers of Reputation-Anchored Finality, not proof of stake —
+no capital is locked, no yield is paid. The scaffold is the
+roster source: the weighted draw over the candidacy window is a
+later milestone; here the roster is the input, an era and at
+most fifty-five keys:
+
+| Module | Contents |
+|---|---|
+| `message` | the checkpoint message: era, sequence, tip, order root; the canonical encoding is the signing message |
+| `roster` | the seats of an era, the quorum constant (37 of 55), the checkpoint cadence (4 s) |
+| `checkpoint` | the message plus the strictly sorted seat signatures, the verification battery, the quorum |
+| `equivocation` | the stripping evidence: two conflicting signatures of one seat, verifiable by any node |
+| `error` | one enum for every rejection, each carrying the offending value |
+
+The order root reuses the canonical list hash of the ordering
+layer (`payload_root`): one implementation of one hash,
+ cross-validated by two vector sets.
+
 ## Building and testing
 
 ```bash
@@ -135,7 +159,8 @@ SHA-512 and the Ed25519 reference keys, from-spec reimplementations
 for the encodings and the whole Edwards25519 group of the Veil).
 `gen_vectors.py` covers the primitives, `gen_tx_vectors.py` the
 transaction layer, `gen_veil_vectors.py` the Veil core,
-`gen_dag_vectors.py` the ordering layer; each writes
+`gen_dag_vectors.py` the ordering layer, `gen_ring_vectors.py`
+the finality layer; each writes
 an archived vector set to the `tests/vectors.json` of its crate, and
 each Rust test suite must reproduce all of it bit for bit. To
 regenerate:
@@ -146,6 +171,7 @@ python3 scripts/gen_vectors.py
 python3 scripts/gen_tx_vectors.py
 python3 scripts/gen_veil_vectors.py
 python3 scripts/gen_dag_vectors.py
+python3 scripts/gen_ring_vectors.py
 ```
 
 The generators verify their own output before writing it (strict

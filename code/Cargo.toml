@@ -12,6 +12,7 @@ members = [
     "crates/antumbra-tx",
     "crates/antumbra-veil",
     "crates/antumbra-dag",
+    "crates/antumbra-ring",
 ]
 
 [workspace.package]
@@ -29,6 +30,7 @@ curve25519-dalek = { version = "4.1", default-features = false, features = ["pre
 sha2 = { version = "0.10", default-features = false }
 subtle = { version = "2.6", default-features = false }
 antumbra-primitives = { path = "crates/antumbra-primitives", version = "0.1.0" }
+antumbra-dag = { path = "crates/antumbra-dag", version = "0.1.0" }
 
 # Test-only: reading the archived cross-implementation vectors.
 serde = { version = "1.0", default-features = false, features = ["derive"] }

@@ -23,6 +23,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "antumbra-ring"
+version = "0.1.0"
+dependencies = [
+ "antumbra-dag",
+ "antumbra-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "antumbra-tx"
 version = "0.1.0"
 dependencies = [

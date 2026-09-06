@@ -1,0 +1,28 @@
+# The finality layer: the Ring checkpoints (ADR-014).
+#
+# The checkpoint message, the checkpoint with its seat
+# signatures, the quorum rule (37 of 55) and the stripping
+# evidence are final containers: they survive into mainnet
+# unchanged. The scaffold is the roster source: the draw of
+# ADR-002 (linear in Kleos) is a later milestone; here the
+# roster is the input. Every output-producing routine is
+# cross-validated against an independent implementation
+# (code/scripts/gen_ring_vectors.py) over an archived vector
+# set (tests/vectors.json).
+
+[package]
+name = "antumbra-ring"
+description = "ANTUMBRA finality layer: checkpoint messages, seat signatures, quorum, stripping evidence"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+antumbra-dag.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
