@@ -31,7 +31,7 @@ see the report: the v2 specification without them is broken):
       (a testimony that counts comes from someone who proved something)
   R3  liable attestations: a target convicted of fraud costs 3 points of
       Deed to each of its witnesses and 5 to its sponsor
-  R4  pooled activity (closed graph) counts at only 10% in the Deed,
+  R4  pooled activity (closed graph) counts at only a quarter of the Deed,
       extended to usages: cross-sales inside a clique do not fabricate
       trust (Axon heritage, mutual-rating detection)
   ECHO_TARGET_CAP = 2.0 points per target per era: without it, 300 bought

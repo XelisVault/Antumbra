@@ -12,6 +12,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "antumbra-kleos"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "antumbra-primitives"
 version = "0.1.0"
 dependencies = [

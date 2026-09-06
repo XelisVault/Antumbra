@@ -13,6 +13,7 @@ members = [
     "crates/antumbra-veil",
     "crates/antumbra-dag",
     "crates/antumbra-ring",
+    "crates/antumbra-kleos",
 ]
 
 [workspace.package]

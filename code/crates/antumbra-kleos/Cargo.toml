@@ -1,0 +1,29 @@
+# The reputation layer: the Kleos machine (ADR-003, ADR-015).
+#
+# The three-layer score (Deed 40, Echo 30, Tenure 30) as a
+# fixed-point integer state machine: every quantity is a u32 of
+# millipoints, every transition saturates at the bounds, every
+# rounding is a floor. The sanctions (fraud conviction, liable
+# witnesses and sponsors, Ring stripping) are state transitions.
+# The Ring draw of an era is deterministic and weighted over the
+# entropy the chain commits. Cross-validated against an
+# independent implementation (code/scripts/gen_kleos_vectors.py)
+# over an archived vector set (tests/vectors.json); the
+# deterministic simulation of simulations/ remains the regression
+# test of the rules themselves.
+
+[package]
+name = "antumbra-kleos"
+description = "ANTUMBRA reputation layer: the fixed-point Kleos machine, sanctions, the Ring draw"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

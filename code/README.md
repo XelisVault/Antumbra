@@ -31,13 +31,15 @@ code/
                               that generates the ordering layer cross vectors
     gen_ring_vectors.py       the independent (Python) implementation
                               that generates the finality layer cross vectors
+    gen_kleos_vectors.py      the independent (Python) implementation
+                              that generates the reputation layer cross vectors
     requirements.txt          the Python dependencies of the generators
 ```
 
-Crates to come, in milestone order: `antumbra-kleos` (reputation),
-`antumbra-identities` (Ember and Cipher), `antumbra-lumen`
-(viewing keys), `antumbra-mandates` (predicate outputs) and the
-`antumbra-node` binary that assembles them.
+Crates to come, in milestone order: `antumbra-identities` (Ember
+and Cipher), `antumbra-lumen` (viewing keys), `antumbra-mandates`
+(predicate outputs) and the `antumbra-node` binary that assembles
+them.
 
 ## The primitives crate
 
@@ -137,6 +139,28 @@ The order root reuses the canonical list hash of the ordering
 layer (`payload_root`): one implementation of one hash,
  cross-validated by two vector sets.
 
+## The reputation layer crate
+
+The Kleos machine of ADR-003 as ADR-015 specifies it exactly: the
+three-layer score (Deed 40, Echo 30, Tenure 30) as a fixed-point
+integer state machine, because consensus code must compute bit
+for bit on every platform and floating point cannot promise that.
+Every quantity is a `u32` of millipoints, every transition
+saturates at the layer bounds, every rounding is a floor, and the
+operation order is specified:
+
+| Module | Contents |
+|---|---|
+| `score` | the state: era transition with decay and saturation, the sanctions (fraud conviction, liable witness, liable sponsor, seat stripping), the queries (witness weight, Ring candidacy), the Echo helpers (R2 weighting, the per-target cap, the R4 discounts) |
+| `draw` | the era draw of the Ring: the Keccak word stream, the weighted linear draw without replacement over the live pool |
+| `error` | one enum for every rejection, each carrying the offending value |
+
+The chain feeds the era inputs and the draw entropy (the order
+root of the last finalized checkpoint of the previous era); it
+never touches the arithmetic. The deterministic simulation of
+`simulations/` remains the regression test of the rules
+themselves; this crate is their normative integer form.
+
 ## Building and testing
 
 ```bash
@@ -160,7 +184,8 @@ for the encodings and the whole Edwards25519 group of the Veil).
 `gen_vectors.py` covers the primitives, `gen_tx_vectors.py` the
 transaction layer, `gen_veil_vectors.py` the Veil core,
 `gen_dag_vectors.py` the ordering layer, `gen_ring_vectors.py`
-the finality layer; each writes
+the finality layer, `gen_kleos_vectors.py` the reputation layer;
+each writes
 an archived vector set to the `tests/vectors.json` of its crate, and
 each Rust test suite must reproduce all of it bit for bit. To
 regenerate:
@@ -172,6 +197,7 @@ python3 scripts/gen_tx_vectors.py
 python3 scripts/gen_veil_vectors.py
 python3 scripts/gen_dag_vectors.py
 python3 scripts/gen_ring_vectors.py
+python3 scripts/gen_kleos_vectors.py
 ```
 
 The generators verify their own output before writing it (strict
