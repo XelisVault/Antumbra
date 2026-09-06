@@ -1,0 +1,45 @@
+==========================================================================
+ANTUMBRA — simulation du noyau social (Kléos / Braise / Anneau)
+moteur déterministe, graine 1618 — 32 ères (16 ans), reproductible
+==========================================================================
+
+PASSE 1 · RÈGLES v2 TELLES QUELLES — la spécification est cassée
+  20 parrains complices, 2 parrainages/an, comportement parfait,
+  budget de témoins illimité : profils inscrits 580
+  premier faux profil candidat : année 8.5 (premier honnête : 12.5) — l'attaquant franchit
+  le seuil AVANT le réseau honnête
+  sièges au pire pour l'attaquant : 55/55 (ère 21, année 10)
+  contrôle de la finalité = 28 sièges : ATTEINT — FAILLE CONFIRMÉE
+  cause : l'Écho acheté (2,0/ère) croît plus vite que l'Écho organique ;
+  le seuil 70 est atteignable par Fait+Écho sans aucune Durée.
+
+PASSE 2 · RÈGLES CORRECTIVES R1-R4 — le mur du temps refermé
+  R1 candidature = Kléos >= 70 ET Durée >= 15 ères sans incident
+  R2 témoignage sans poids tant que Fait < 20
+  R3 attestations responsables (fraud convaincue : -3 Fait/témoin)
+  R4 activité mutualisée d'une clique comptée à 25 %
+  croissance honnête : premiers candidats année 12.5, 55 sièges pourvus en fin de course
+  Kléos honnête médian 77.4 · p90 78.5 · « baleine » inactive 30.0 (jamais candidate)
+  Herfindahl des candidats 0.0053 (dispersion saine)
+
+  MÊME ATTAQUE MAXIMALE SOUS R1-R4 :
+  profils inscrits : 580 · Kléos médian des faux 11.9 (honnêtes 76.5)
+  faux profils candidats : 0 vs 190 honnêtes
+  sièges au pire pour l'attaquant : 0/55 — aucun, jamais
+  contrôle de la finalité = 28 sièges : JAMAIS APPROCHÉ — le mur tient
+  rappel : tout siège signant un fork est déchu sur-le-champ (Kléos -> 0)
+  Herfindahl final des candidats : 0.0053
+
+S2 · ACHAT DE TÉMOINS POUR GONFLER L'ÉCHO — arithmétique
+  300 témoins établis, SANS plafond par cible : gain 30 pts/ère => Écho 30 en 1.0 ère — FAILLE
+  avec le plafond 2,0/cible/ère : Écho 30 en >= 15.4 ères (7.7 ans) d'achat continu
+  avec R2 : les témoins frais (Fait < 20) ne pèsent RIEN ; louer des
+  témoins établis expose chacun à -3 Fait par cible convaincue (R3)
+  => payer 300 témoins ne donne pas plus qu'en payer 20, et le
+     prix par point monte jusqu'à l'absurde : le mur du temps tient
+
+INVARIANTS VÉRIFIÉS À CHAQUE ÈRE (assertions, 3 passes x 32 ères) :
+  Kléos dans [0,100] · Fait<=40 · Écho<=30 · Durée<=30
+  gain d'Écho par cible <= 2,0 · sièges = 55 ou moins si pénurie
+  parrainage <= 2/an/parrain · « baleine » jamais candidate
+  sous R1 : tout candidat a Durée >= 15 et Durée vivante : OK
