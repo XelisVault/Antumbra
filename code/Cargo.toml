@@ -18,6 +18,7 @@ members = [
     "crates/antumbra-agents",
     "crates/antumbra-jobs",
     "crates/antumbra-forge",
+    "crates/antumbra-state",
 ]
 
 [workspace.package]
@@ -36,6 +37,7 @@ sha2 = { version = "0.11", default-features = false }
 subtle = { version = "2.6", default-features = false }
 antumbra-primitives = { path = "crates/antumbra-primitives", version = "0.1.0" }
 antumbra-dag = { path = "crates/antumbra-dag", version = "0.1.0" }
+antumbra-tx = { path = "crates/antumbra-tx", version = "0.1.0" }
 
 # Test-only: reading the archived cross-implementation vectors.
 serde = { version = "1.0", default-features = false, features = ["derive"] }

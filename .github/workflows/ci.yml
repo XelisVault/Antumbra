@@ -157,7 +157,7 @@ jobs:
       - name: Install generator dependencies
         run: pip install -r scripts/requirements.txt
         working-directory: code
-      - name: Regenerate the ten vector sets
+      - name: Regenerate the eleven vector sets
         run: |
           python3 scripts/gen_vectors.py
           python3 scripts/gen_tx_vectors.py
@@ -169,6 +169,7 @@ jobs:
           python3 scripts/gen_agents_vectors.py
           python3 scripts/gen_jobs_vectors.py
           python3 scripts/gen_forge_vectors.py
+          python3 scripts/gen_state_vectors.py
         working-directory: code
       - name: The archived vector sets are well-formed
         run: |
@@ -177,7 +178,7 @@ jobs:
           import json
 
           files = sorted(glob.glob("crates/*/tests/vectors.json"))
-          assert len(files) == 10, f"expected 10 archived vector sets, found {len(files)}"
+          assert len(files) == 11, f"expected 11 archived vector sets, found {len(files)}"
           for path in files:
               with open(path, encoding="utf-8") as handle:
                   data = json.load(handle)

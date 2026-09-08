@@ -78,6 +78,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "antumbra-state"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "antumbra-tx",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "antumbra-tx"
 version = "0.1.0"
 dependencies = [

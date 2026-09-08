@@ -44,13 +44,17 @@ pub const MAX_EXTRA_LEN: usize = 512;
 
 /// The transaction types of the whitepaper, in table order.
 ///
-/// Version 1 carries transfers only: the other tags are reserved so
-/// that their final numbering is frozen now, before any chain
-/// exists.
+/// Version 1 carries transfers and coinbases (ADR-024); the other
+/// tags are reserved so that their final numbering is frozen now,
+/// before any chain exists.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum TxType {
     /// A standard payment.
     Transfer,
+    /// The emission of new units and the miner's fee claim
+    /// (ADR-024). No inputs, a zero fee, one or two outputs, an
+    /// eight-byte little-endian height in the extra field.
+    Coinbase,
     /// An output with a release predicate.
     Mandate,
     /// An Ember or Cipher identity registration.
@@ -69,6 +73,7 @@ impl TxType {
     pub const fn tag(self) -> u8 {
         match self {
             Self::Transfer => 0,
+            Self::Coinbase => 6,
             Self::Mandate => 1,
             Self::IdentityRegistration => 2,
             Self::KleosAttestation => 3,
@@ -82,6 +87,7 @@ impl TxType {
     pub const fn from_tag(tag: u8) -> Option<Self> {
         match tag {
             0 => Some(Self::Transfer),
+            6 => Some(Self::Coinbase),
             1 => Some(Self::Mandate),
             2 => Some(Self::IdentityRegistration),
             3 => Some(Self::KleosAttestation),
@@ -96,6 +102,7 @@ impl core::fmt::Display for TxType {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let name = match self {
             Self::Transfer => "transfer",
+            Self::Coinbase => "coinbase",
             Self::Mandate => "mandate",
             Self::IdentityRegistration => "identity registration",
             Self::KleosAttestation => "kleos attestation",
@@ -352,7 +359,7 @@ impl Transaction {
         }
         let tag = r.read_u8()?;
         let tx_type = TxType::from_tag(tag).ok_or(TxError::UnknownType(tag))?;
-        if tx_type != TxType::Transfer {
+        if !matches!(tx_type, TxType::Transfer | TxType::Coinbase) {
             return Err(TxError::UnsupportedType(tag));
         }
         let fee = Amount::from_atomic(r.read_u64()?);
@@ -400,16 +407,23 @@ impl Transaction {
     /// Validates the rules decidable from the transaction bytes
     /// alone: at least one input, at least one output, non-zero
     /// amounts, and a fee at or above the schedule minimum for the
-    /// canonical size.
+    /// canonical size. A coinbase (ADR-024) replaces the input and
+    /// fee rules by its own: no inputs, a zero fee, one or two
+    /// outputs, an eight-byte little-endian height in the extra
+    /// field.
     ///
     /// State-dependent rules (existence, unspentness, conservation
-    /// against the referenced outputs, network consistency) belong
-    /// to the ordering layer.
+    /// against the referenced outputs, the coinbase value against
+    /// the reward calendar, network consistency) belong to the
+    /// ordering layer.
     ///
     /// # Errors
     ///
     /// Returns a [`TxError`] naming the violated rule.
     pub fn validate(&self, fees: &FeeSchedule) -> Result<(), TxError> {
+        if self.tx_type == TxType::Coinbase {
+            return self.validate_coinbase();
+        }
         if self.inputs.is_empty() {
             return Err(TxError::NoInputs);
         }
@@ -431,6 +445,35 @@ impl Transaction {
                 fee: self.fee,
                 minimum,
             });
+        }
+        Ok(())
+    }
+
+    /// The container rules of the coinbase (ADR-024): no inputs, a
+    /// zero fee, one or two outputs, an eight-byte extra field. The
+    /// height the extra field carries is read by the state layer,
+    /// which can see the containing block.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`TxError`] naming the violated rule.
+    fn validate_coinbase(&self) -> Result<(), TxError> {
+        if !self.inputs.is_empty() {
+            return Err(TxError::CoinbaseInputs(self.inputs.len()));
+        }
+        if !self.fee.is_zero() {
+            return Err(TxError::CoinbaseFee);
+        }
+        if self.outputs.is_empty() || self.outputs.len() > 2 {
+            return Err(TxError::CoinbaseOutputs(self.outputs.len()));
+        }
+        for (index, output) in self.outputs.iter().enumerate() {
+            if output.amount.is_zero() {
+                return Err(TxError::ZeroAmount(index));
+            }
+        }
+        if self.extra.len() != 8 {
+            return Err(TxError::CoinbaseExtra(self.extra.len()));
         }
         Ok(())
     }
@@ -838,11 +881,11 @@ mod tests {
 
     #[test]
     fn every_type_tag_roundtrips_through_from_tag() {
-        for tag in 0..=5u8 {
-            let tx_type = TxType::from_tag(tag).expect("tags 0 to 5 are defined");
+        for tag in [0u8, 6, 1, 2, 3, 4, 5] {
+            let tx_type = TxType::from_tag(tag).expect("the carried tags are defined");
             assert_eq!(tx_type.tag(), tag);
         }
-        assert_eq!(TxType::from_tag(6), None);
+        assert_eq!(TxType::from_tag(7), None);
         assert_eq!(TxType::from_tag(255), None);
     }
 
@@ -888,5 +931,113 @@ mod tests {
         // Total: 12 header + 132 input + 1 count + 77 output + 1
         // empty extra prefix.
         assert_eq!(bytes.len(), 12 + 132 + 1 + 77 + 1);
+    }
+
+    /// A minimal coinbase: no inputs, zero fee, one output, the
+    /// height in the extra field (ADR-024).
+    fn sample_coinbase(height: u64) -> Transaction {
+        Transaction::new(
+            TxType::Coinbase,
+            Amount::ZERO,
+            Vec::new(),
+            vec![TxOut::new(address(40), Amount::from_atomic(9_792_157))],
+            height.to_le_bytes().to_vec(),
+        )
+    }
+
+    #[test]
+    fn coinbase_decodes_and_roundtrips() {
+        let tx = sample_coinbase(1);
+        let bytes = tx.encode();
+        let back = Transaction::decode(&bytes).expect("coinbase decodes");
+        assert_eq!(back, tx, "encode-decode-encode is the identity");
+        assert_eq!(back.tx_type(), TxType::Coinbase);
+        assert_eq!(bytes[2], 6, "the coinbase wire tag is 6");
+    }
+
+    #[test]
+    fn coinbase_validate_accepts_the_container() {
+        let fees = FeeSchedule::PROVISIONAL;
+        sample_coinbase(1)
+            .validate(&fees)
+            .expect("container rules hold");
+        let two_outputs = Transaction::new(
+            TxType::Coinbase,
+            Amount::ZERO,
+            Vec::new(),
+            vec![
+                TxOut::new(address(41), Amount::from_atomic(9_187_002)),
+                TxOut::new(address(42), Amount::from_atomic(605_155)),
+            ],
+            7u64.to_le_bytes().to_vec(),
+        );
+        two_outputs
+            .validate(&fees)
+            .expect("two outputs are the treasury era form");
+    }
+
+    #[test]
+    fn coinbase_validate_names_every_violation() {
+        let fees = FeeSchedule::PROVISIONAL;
+        let with_input = Transaction::new(
+            TxType::Coinbase,
+            Amount::ZERO,
+            vec![TxIn::unsigned(
+                OutputRef::new(Hash([1u8; 32]), 0),
+                key(10).public(),
+            )],
+            vec![TxOut::new(address(40), Amount::from_atomic(1))],
+            1u64.to_le_bytes().to_vec(),
+        );
+        assert_eq!(with_input.validate(&fees), Err(TxError::CoinbaseInputs(1)));
+
+        let with_fee = Transaction::new(
+            TxType::Coinbase,
+            Amount::from_atomic(1),
+            Vec::new(),
+            vec![TxOut::new(address(40), Amount::from_atomic(1))],
+            1u64.to_le_bytes().to_vec(),
+        );
+        assert_eq!(with_fee.validate(&fees), Err(TxError::CoinbaseFee));
+
+        let three_outputs = Transaction::new(
+            TxType::Coinbase,
+            Amount::ZERO,
+            Vec::new(),
+            vec![
+                TxOut::new(address(40), Amount::from_atomic(1)),
+                TxOut::new(address(41), Amount::from_atomic(1)),
+                TxOut::new(address(42), Amount::from_atomic(1)),
+            ],
+            1u64.to_le_bytes().to_vec(),
+        );
+        assert_eq!(
+            three_outputs.validate(&fees),
+            Err(TxError::CoinbaseOutputs(3))
+        );
+
+        let bad_extra = Transaction::new(
+            TxType::Coinbase,
+            Amount::ZERO,
+            Vec::new(),
+            vec![TxOut::new(address(40), Amount::from_atomic(1))],
+            vec![0u8; 7],
+        );
+        assert_eq!(bad_extra.validate(&fees), Err(TxError::CoinbaseExtra(7)));
+    }
+
+    #[test]
+    fn reserved_tags_stay_reserved_beyond_the_coinbase() {
+        for tag in [1u8, 2, 3, 4, 5, 7] {
+            let tx = sample_coinbase(1);
+            let mut bytes = tx.encode();
+            bytes[2] = tag;
+            let expected = if tag < 6 {
+                Err(TxError::UnsupportedType(tag))
+            } else {
+                Err(TxError::UnknownType(tag))
+            };
+            assert_eq!(Transaction::decode(&bytes), expected, "tag {tag}");
+        }
     }
 }

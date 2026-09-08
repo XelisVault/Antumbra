@@ -54,6 +54,16 @@ pub enum TxError {
     KeyMismatch(usize),
     /// The Ed25519 signature at this input index does not verify.
     InvalidSignature(usize),
+    /// A coinbase carries inputs (ADR-024): it mints, it does not
+    /// spend.
+    CoinbaseInputs(usize),
+    /// A coinbase carries a non-zero fee field (ADR-024).
+    CoinbaseFee,
+    /// A coinbase carries more than two outputs or none (ADR-024).
+    CoinbaseOutputs(usize),
+    /// The extra field of a coinbase is not the eight-byte height
+    /// (ADR-024).
+    CoinbaseExtra(usize),
 }
 
 impl core::fmt::Display for TxError {
@@ -63,11 +73,24 @@ impl core::fmt::Display for TxError {
             Self::InvalidVersion(v) => write!(f, "unsupported transaction version {v}"),
             Self::UnknownType(t) => write!(f, "unknown transaction type tag {t}"),
             Self::UnsupportedType(t) => {
-                write!(f, "transaction type tag {t} is not a version 1 transfer")
+                write!(f, "transaction type tag {t} is not carried by version 1")
             }
             Self::TooManyInputs(n) => write!(f, "{n} inputs exceed the limit"),
             Self::TooManyOutputs(n) => write!(f, "{n} outputs exceed the limit"),
             Self::ExtraTooLarge(n) => write!(f, "{n} bytes of extra data exceed the limit"),
+            Self::CoinbaseInputs(n) => {
+                write!(f, "a coinbase carries no inputs, found {n}")
+            }
+            Self::CoinbaseFee => write!(f, "a coinbase carries a zero fee field"),
+            Self::CoinbaseOutputs(n) => {
+                write!(f, "a coinbase carries one or two outputs, found {n}")
+            }
+            Self::CoinbaseExtra(n) => {
+                write!(
+                    f,
+                    "the extra field of a coinbase is the 8-byte height, found {n} bytes"
+                )
+            }
             Self::UnsortedInputs => {
                 write!(f, "inputs must be strictly ascending by (hash, index)")
             }

@@ -1,0 +1,27 @@
+# The state layer: the ledger (ADR-013's deferred rules, ADR-024).
+#
+# Existence, unspentness, double-spend resolution by the consensus
+# order, conservation, the emission transaction and its calendar,
+# the treasury split and the coinbase maturity. Pure and
+# deterministic: two nodes holding the same order and the same
+# payloads compute the same ledger, bit for bit. Cross-validated
+# against an independent implementation
+# (code/scripts/gen_state_vectors.py) over an archived vector set
+# (tests/vectors.json).
+
+[package]
+name = "antumbra-state"
+description = "ANTUMBRA state layer: UTXO ledger, coinbase, emission calendar, treasury, maturity"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+antumbra-tx.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
