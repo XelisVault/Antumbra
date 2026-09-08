@@ -24,3 +24,11 @@ updates:
       prefix: "chore(ci)"
     labels:
       - "rail-b"
+    ignore:
+      # The MSRV job pins the declared minimum toolchain
+      # (workspace rust-version). Dependabot must never raise it on
+      # its own: when the declared MSRV moves, the job and the
+      # workspace change together, in one rail-C commit. See PR #1,
+      # closed by the wall.
+      - dependency-name: "dtolnay/rust-toolchain"
+        versions: [">=1.85.1"]
