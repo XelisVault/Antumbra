@@ -101,6 +101,20 @@ acceptable, published result. See
 
 The project website is [xelisvault.xyz](https://xelisvault.xyz).
 
+## The CI wall
+
+Every push and pull request runs the full battery: format, lint
+(zero warnings), tests (including the archived cross-implementation
+vectors), the declared MSRV, locked debug and release builds, docs,
+`cargo audit`, `cargo deny`, vector regeneration (the Python
+generators must reproduce the committed vectors bit for bit), the
+Kleos and emission simulations with a determinism gate, the
+whitepaper compiled from source, repository hygiene, and the
+merge-rail policy: consensus changes are `rail-c` pull requests
+with an architecture decision record in the diff. Branch protection
+requires every check; a red check on `main` blocks the phase. The
+wall is documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 The code is published under the MIT license. The whitepaper is

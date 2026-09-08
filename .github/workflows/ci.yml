@@ -1,10 +1,13 @@
-# ANTUMBRA continuous integration.
+# ANTUMBRA continuous integration — the CI wall.
 #
-# Every push and every pull request runs the full check battery.
-# A red check on main blocks the phase: no exception, no bypass.
-# This is the executable layer of the CONTRIBUTING.md verification
-# method (cross vectors, deterministic simulation, reproducible
-# builds).
+# Every push and every pull request runs the full battery. A red
+# check on main blocks the phase: no exception, no bypass. Branch
+# protection requires every job below before a merge, and the
+# merge-rails job routes each pull request through the rails of
+# CONTRIBUTING.md (consensus changes are rail-C merges with an ADR
+# in the diff). This is the executable layer of the verification
+# method: cross vectors, deterministic simulation, reproducible
+# sources, honest builds.
 
 name: CI
 
@@ -12,6 +15,13 @@ on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,6 +32,7 @@ jobs:
   format:
     name: Format
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -34,6 +45,7 @@ jobs:
   clippy:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -43,12 +55,13 @@ jobs:
         with:
           workspaces: code
       - name: Lint (zero warnings tolerated)
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
         working-directory: code
 
   test:
     name: Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -56,28 +69,47 @@ jobs:
         with:
           workspaces: code
       - name: Unit, integration and cross-implementation vector tests
-        run: cargo test --workspace
+        run: cargo test --workspace --locked
         working-directory: code
       - name: Documentation tests
-        run: cargo test --workspace --doc
+        run: cargo test --workspace --doc --locked
+        working-directory: code
+
+  msrv:
+    name: MSRV (1.85)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: code
+      - name: The declared minimum supported Rust version still builds everything
+        run: cargo build --workspace --locked --all-targets
         working-directory: code
 
   build:
-    name: Build (release)
+    name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: code
-      - name: Release build
+      - name: Debug build (locked)
+        run: cargo build --workspace --locked --all-targets
+        working-directory: code
+      - name: Release build (locked)
         run: cargo build --workspace --release --locked
         working-directory: code
 
   docs:
     name: Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -90,6 +122,7 @@ jobs:
   audit:
     name: Security audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: taiki-e/install-action@v2
@@ -102,6 +135,7 @@ jobs:
   deny:
     name: Licenses and bans
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: taiki-e/install-action@v2
@@ -114,6 +148,7 @@ jobs:
   vectors:
     name: Vector regeneration
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -131,6 +166,21 @@ jobs:
           python3 scripts/gen_ring_vectors.py
           python3 scripts/gen_kleos_vectors.py
         working-directory: code
+      - name: The archived vector sets are well-formed
+        run: |
+          python3 - <<'PYEOF'
+          import glob
+          import json
+
+          files = sorted(glob.glob("crates/*/tests/vectors.json"))
+          assert len(files) == 6, f"expected 6 archived vector sets, found {len(files)}"
+          for path in files:
+              with open(path, encoding="utf-8") as handle:
+                  data = json.load(handle)
+              assert data.get("format") == 1, f"{path}: unexpected format field"
+              print(f"vector set ok: {path}")
+          PYEOF
+        working-directory: code
       - name: The committed vectors are exactly the regenerated ones
         run: git diff --exit-code -- crates
         working-directory: code
@@ -138,6 +188,7 @@ jobs:
   simulation:
     name: Social core regression
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -151,3 +202,67 @@ jobs:
       - name: Emission calendar (cap must be exact)
         run: python3 emission.py
         working-directory: simulations
+      - name: Determinism gate (two runs, byte-identical stdout)
+        run: |
+          python3 kleos.py > /tmp/kleos-run1.txt
+          python3 kleos.py > /tmp/kleos-run2.txt
+          cmp /tmp/kleos-run1.txt /tmp/kleos-run2.txt || { echo "kleos.py output is not deterministic"; exit 1; }
+          python3 emission.py > /tmp/emission-run1.txt
+          python3 emission.py > /tmp/emission-run2.txt
+          cmp /tmp/emission-run1.txt /tmp/emission-run2.txt || { echo "emission.py output is not deterministic"; exit 1; }
+          echo "determinism: both engines are byte-identical across runs"
+        working-directory: simulations
+
+  whitepaper:
+    name: Whitepaper build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install figure dependencies
+        run: pip install matplotlib
+      - name: Regenerate the two figures from the deterministic engines
+        run: |
+          python3 docs/whitepaper/src/gen_figures.py | tee /tmp/figures.log
+          grep -q 'sum == cap: True' /tmp/figures.log || { echo "emission figure: the cap arithmetic no longer closes"; exit 1; }
+      - name: Install tectonic (pinned, the binary tested locally)
+        run: |
+          curl -fsSL "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz" | tar xz
+          install -m 0755 tectonic /usr/local/bin/tectonic
+          tectonic --version
+      - name: Compile the whitepaper from source
+        run: tectonic docs/whitepaper/src/main.tex
+
+  hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install YAML checker
+        run: pip install pyyaml
+      - name: Conflict markers, whitespace, newlines, encodings, syntax
+        run: bash ci/check_repo_hygiene.sh
+
+  rails:
+    name: Merge rails
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Route the diff through the rails (policy-as-code)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RAILS_EVENT: ${{ github.event_name }}
+          RAILS_PR_NUMBER: ${{ github.event.pull_request.number }}
+          RAILS_REPOSITORY: ${{ github.repository }}
+        run: python3 ci/merge_rails.py

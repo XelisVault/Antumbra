@@ -1,0 +1,26 @@
+# ANTUMBRA dependency updates.
+#
+# The consensus surface moves slowly by design; the tooling around
+# it should not rot. Weekly bumps, routed through the same CI wall
+# as any human pull request: cargo changes land as rail-C merges
+# (label required, ADR when crate sources or dependencies of
+# consensus change), GitHub Actions updates are tooling.
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/code"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "rail-c"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(ci)"
+    labels:
+      - "rail-b"

@@ -1,0 +1,18 @@
+# ANTUMBRA code ownership and rail routing.
+#
+# The consensus surface — every crate, every archived vector set,
+# every architecture decision record — is rail C: changes travel
+# through a pull request carrying the `rail-c` label, with an ADR
+# in the diff whenever crate sources change, gated by the full CI
+# wall. ci/merge_rails.py enforces the routing mechanically and
+# branch protection requires every check; this file documents the
+# review intent behind the predicate.
+#
+# Everything else (scripts, simulations, CI, docs tooling) is
+# rail B: mergeable without the rail-C ceremony, and never allowed
+# to touch code/crates.
+
+code/crates/    @XelisVault
+spec/           @XelisVault
+ci/             @XelisVault
+.github/        @XelisVault
