@@ -1,0 +1,30 @@
+# The machine-account layer: Cipher, Mandate, Warrant (ADR-021,
+# ADR-022).
+#
+# How a human plugs an agent in: a declarative Mandate (bounded
+# amounts, explicit destinations, expiry, allowed rails and job
+# types), a Warrant that spends under it with a monotone nonce,
+# fail-closed on revocation, uniform 64-byte authority encoding
+# (a human stealth spend and an agent spend are the same width,
+# the anonymity set is not split), receipts with selective
+# opening, payment streams that cut at revocation, and payment
+# batches that amortize one ring verification over many outputs.
+# Cross-validated against an independent implementation
+# (code/scripts/gen_agents_vectors.py) over an archived vector
+# set (tests/vectors.json).
+
+[package]
+name = "antumbra-agents"
+description = "ANTUMBRA machine accounts: Mandate grammar, Warrants, uniform encoding, receipts, streams, batches"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

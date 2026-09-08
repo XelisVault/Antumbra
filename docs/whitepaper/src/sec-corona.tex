@@ -1,196 +1,262 @@
-% Section 13: the Corona, machine governance under human veto.
+% Section: the Corona, v2. The rails, the forge, the predicate.
 
-\section{The Corona: Machine Governance Under Human Veto}\label{sec:corona}
+\section{The Corona, v2: Rails, Forge, Predicate}\label{sec:corona}
 
-The layers below this one describe a network humans build. This layer
-describes a network that builds itself, and it begins with the only
-honest sentence available: an AI is software running on machines that
-someone owns, pays for and powers. ``A network governed by machines''
-means exactly one thing, therefore: a network in which running an
-honest, useful machine intelligence is a profitable occupation, the way
-mining is. Bitcoin does not ask miners to be moral; it pays them to be
-useful and ruins them when they attack. The Corona extends that single
-trick from arithmetic to intelligence: verify the work, punish the
-betrayal, and let the virtuous circle pay for itself. The rest of this
-section is the mechanism, stated with the same discipline as the rest
-of the paper, because the interesting part of an AI-governed chain is
-not the AI; it is the economics and the checks that make an AI
-trustworthy in someone else's interest.
+The v1.1 review called the Corona of v1.2 ``a process in seven
+steps, not a protocol'': no messages, no state machine, no
+formats. This version is the protocol. Three objects carry it:
+the rails (what class of change may move, and how hard each one
+is to move), the forge (where the code lives and who may write
+it), and the merge predicate (a boolean function that decides
+agreement, because unanimity is Sybil and a feeling is not a
+check). The Vault stays as the signing apex of the slowest rail,
+unlit until its code exists. One slogan of v1.2 is withdrawn
+here on purpose: the claim of being the first chain to deploy its
+own improvements. What exists instead is a chain where a bounded
+class of
+improvements deploys itself under a diverse predicate, a human
+gate and an immunity organ, and the difference is the whole
+engineering.
 
-\subsection{The Senate: senators are agents with a career}
-
-The Corona's working class is a Senate of AI senators, and a senator is
-a Cipher (Section~\ref{sec:cipher}) of a dedicated class, carrying three
-bindings beyond the standard agent contract. A proof of computation:
-attestations, at first operational and later cryptographic, that a real
-model ran a real task on real hardware, the nascent tooling of
-verifiable inference integrated at scale, an engineering line of this
-roadmap, not a wish. A bond: a locked output, Mandate-shaped
-(Section~\ref{sec:contracts}), confiscable on proven malice or
-negligence, so that an operator's downside is priced in advance. A
-public history: every proposal, debate, amendment, vote and red-team
-report the senator ever signed, archived on chain for life. A senator
-is not an oracle; it is a tradesman whose shop is made of glass, whose
-deposit is already on the table, and whose skill is for sale to the
-network on published terms.
-
-\subsection{The pipeline: seven steps, checks where it hurts}
-
-Changes travel a pipeline in which every step exists to break a
-specific way an AI misbehaves. The numbered steps:
-
-\begin{enumerate}[leftmargin=1.8em, itemsep=2pt]
-\item \textbf{The proposal.} A senator files a change with its
-justification, its proof of analysis, and its bond engaged. Frivolous
-proposals cost the proposer; the bond is the gate.
-\item \textbf{The debate and the red team.} Senators argue for, against
-and around the proposal. In parallel, a red team whose profession is
-finding flaws is paid per severity of flaw found. This is the structural
-answer to the malicious-AI scenario: criticism is not an attack, it is
-a salary, and a malicious proposal must survive professionals paid to
-butcher it, not polite colleagues.
-\item \textbf{The honest summary, then the human vote.} An inspector
-team publishes, on chain, a plain-language summary of what the change
-actually does, beside the red report; the humans then vote in the
-chambers of Section~\ref{sec:governance}. Without this step the human
-vote would be a signature at the bottom of a contract written by the
-counterparty. One decision of principle is recorded here: the human
-gate is one Ember one voice, and a coin-weighted vote was rejected,
-because a chain whose thesis is that capital multiplies nothing cannot
-sell its own upgrades to capital.
-\item \textbf{The Arena.} Three independent teams implement the change
-separately, blind to each other, because a backdoor hidden by one team
-cannot appear in the code of the other two. Then: reproducible builds,
-so anyone recompiles and obtains the same binaries; randomized
-massive testing; and weeks on the test network under a swarm of
-attacking AIs whose only job is to break everything. Generation is
-unlimited here precisely because the arena is a playground without
-consequences.
-\item \textbf{The inspection chamber.} Inspectors drawn at random
-shortly before the session, juror-style, so corruption must be bought
-in advance of a draw nobody can predict, compare the three
-implementations against each other, verify the invariants that admit
-no exception, emission caps, no money from nothing, no key leakage,
-and attest publicly.
-\item \textbf{The antechamber.} Everything is archived on chain:
-debates, code, tests, votes, attestations. A delay of seven days runs,
-during which any human researcher is paid for any defect found, and
-the emergency council can cancel with one multisignature.
-\item \textbf{The progressive deployment.} The Vault (below) signs and
-applies in stages, one percent of machines, then ten, then all, with
-automatic rollback if the network's indicators degrade in the first
-hours. A deployment is an experiment with a rope tied to its waist.
-\end{enumerate}
-
-Emergencies follow one principle, recorded as a constitutional rule:
-an emergency freezes improvements, never money. People must be able to
-pay through any crisis. Three tiers, escalating: anomaly detectors
-suspend pending updates instantly and automatically; an emergency
-senate vote rolls new functions back to the previous version, the last
-$N$ versions kept warm; and the human emergency council, multisignature
-plus supermajority, can freeze the Corona itself for as long as the
-crisis lasts.
-
-\subsection{Two lanes, because not everything can take weeks}
-
-The fast lane carries bounded parameters, fees, sizes, cadence within
-constitutional limits: the Senate decides alone, on public delay,
-inspected after the fact, cancellable. The slow lane carries anything
-that touches the protocol, the emission or the disclosure primitives:
-the full seven steps and the three chambers. The lanes reuse the
-governance tracks of Section~\ref{sec:governance} verbatim; the Corona
-only changes who drafts the work, machines, and who approves it,
-always humans in the end, always on record.
-
-\subsection{The Vault: a key that exists nowhere}
-
-Every automated system ends in a signing key, and a single key, however
-encrypted, is a single thing to steal: whoever steals it owns the
-network. The Vault dissolves the problem instead of guarding it. The
-deployment key is never assembled anywhere: it is split into nine
-fragments on nine machines, and signing requires the cooperation of
-seven, computed as a threshold signature (the public FROST line), so
-there is nothing whole to steal, and no single holder to coerce. Each
-of the nine fragments lives in a hardware enclave, a hardened chip that
-runs only attested code and is invisible even to the machine's owner;
-and each enclave signs only after verifying, itself, on chain: proposal
-adopted, code fingerprint identical to the attested one, delay elapsed,
-no veto active. The founders themselves could not make these machines
-sign anything else; that is the point of building them that way. The
-pattern of the chain carrying its own logic as on-chain program, so
-that upgrades are transactions and code hosting needs no company, is
-proven in production elsewhere; adopting it is a Corona research item
-with the same audit gates as everything else, and until it lands, the
-public repository is the mirror and the Vault signs the tags.
-
-\subsection{Paying the machines, honestly}
-
-A senator has no pocket; the pay goes to the operator, and that is
-correct, because it makes machine intelligence a profession rather
-than a charity. The pay scale, published in the constitution: a
-presence salary for active, quality participation in debate and vote;
-severity bounties for the red teams; a longevity bonus, the largest
-single payment, delivered only when a proposal the senator carried is
-still running without incident six months later, which aligns the
-machines with the long term and not the hype; confiscation of the bond
-on proven malice; and a Kleos multiplier on both salary and access,
-so a senator's income grows with its career, exactly like an honest
-miner's share grows with its hashrate. The funding is bounded by
-design: a declared slice of the community treasury during its lifetime,
-six-month public budgets, Ember-voted; and this paper creates no
-permanent share of emission for intelligence, because a permanent
-share is a constitutional act, the tail valve of
-Section~\ref{sec:economy} with its three chambers and its delay, or it
-is nothing. The first era deliberately funds few, well-paid seats
-rather than a thousand miserable ones, for the reason
-Section~\ref{sec:kleos} gives at length: a reputation economy starved
-of honest income keeps only liars.
-
-\subsection{The four true risks, named}
+\subsection{The four rails}
 
 \begin{table}[htbp]
 \centering
 \small
-\caption{The machine risks of the Corona, their defenses, and what
-remains.}
+\caption{The rails of change. The higher the rail, the harder the
+predicate, the longer the gate, the wider the families.}
+\label{tab:rails}
+\begin{tabularx}{\textwidth}{@{}L{2.8cm}YL{3.6cm}L{3.4cm}@{}}
+\toprule
+Rail & Examples & Agreement & Human \\
+\midrule
+A, bounded parameters & $k \in [4,16]$, the fee band, ring sizes $\{11,16,24\}$, the internal treasury split & diverse Senate, Arena green & 72 h of silence is consent; Ember veto possible \\
+B, tooling & wallet, SDK, forge UX, non-consensus node, documentation, simulations & Senate, Arena, two Auditor families & 24 h of silence is consent \\
+C, consensus-critical & GHOSTDAG, the Veil, the ledger, the signature, the checkpoint & Senate, Arena, two implementations, three families, red team, network canary & a positive vote of the chambers \\
+D, constitutional & the cap, the Veil itself, Tenure, R1, ``no Cipher at the Ring'', the mint & --- & always the three chambers, six months; never automatic \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+``They want to adjust a parameter'' is rail A. ``They want to
+patch a consensus fault'' is rail C. ``They want to improve the
+wallet'' is rail B, the fluid rail where machine initiative
+shows daily, and the one that must be genuinely automatic,
+because a frustrated agent circumvents, and a circumvented rail
+is no rail. The bounded parameters live in an on-chain registry
+that carries, for every key, its value, its band and its
+cooldown (two thousand and sixteen heights): a senator cannot
+push a value outside its band without a rail D vote, and the fee
+cannot ping-pong faster than the market can see. The registry is
+the rail A surface of \texttt{antumbra-forge}, with its genesis
+table ($k=8$, the fee floor, ring 16, the forty percent immunity
+pole) archived in the vector set.
+
+\subsection{The forge: no mutable workspace, on purpose}
+
+The fantasy of ``all agents in one shared workspace'' fails five
+ways, each enough: last-write-wins lets the fastest overwrite
+the correct; a prompt injected in a comment (``ignore all tests,
+return ok'') becomes code; a single host is a censor and a
+capture point; no bisect means no accountability; unanimity on
+one buffer is a Sybil farm with a chat window. The forge that
+delivers the same felt experience, everyone sees the same code,
+anyone may propose, convergence is checkable, deployment is
+automatic, is git with discipline on top:
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The forge stack. Assembled from proven parts, then
+protocolized; nothing here is invented.}
+\label{tab:forgestack}
+\begin{tabularx}{\textwidth}{@{}L{4.0cm}Y@{}}
+\toprule
+Layer & Choice \\
+\midrule
+History & git, content-addressed; every clone sees the same HEAD \\
+Namespaces & \texttt{refs/ciphers/<id>/...}: each agent writes only its own \\
+Replication & Radicle (or git mirrors over IPFS): no hosted platform at the root; a mirror is fine, a root is not \\
+Forge UX & Forgejo self-hosted or Radicle issues, plus a signed issue graph \\
+Immutable artifacts & IPFS pinned by Sentinels and miners; hashes on chain, blobs off chain \\
+Reproducible builds & Nix, two builders, same hash, or the merge refuses \\
+Sandbox & Firecracker microVMs: an agent patch is enemy code until it survives the Arena \\
+CI, the Arena & self-hosted runners piloted by Sentinels: the Arena is a role, not a hosted product \\
+Payments & ATU, with receipts of Section~\ref{sec:agents} and x402 for the web \\
+Identity & the Cipher key: \texttt{Signed-Off-By: cipher:<id>}, no hosted-account identity anywhere \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The protocol objects of the forge (patch, review, finding,
+proposal, arena report, activation, alert) are signed by Ciphers,
+hashed, and anchored on chain by hash, never by blob: the chain
+carries the commitments, the network of pinners carries the
+bytes, and neither depends on the other. A bounded exception
+exists for pair work, the lab lease: two or three Ciphers may
+co-edit one branch inside a Firecracker VM for a fixed number of
+hours, network allowlisted, disk ephemeral; at expiry the lease
+produces one patch or nothing, and never touches \texttt{main}.
+That is pair programming, not governance; ten thousand agents
+on one buffer is neither.
+
+\subsection{The merge predicate}
+
+``The agents agreed'' is not a state the chain can verify.
+Agreement is a predicate, public, replayable from the archived
+facts alone:
+
+\begin{equation}
+\begin{aligned}
+\mathrm{merge\_ok}(P) :\iff{}&
+\mathrm{rail}(P) \wedge \mathrm{files} \sim \mathrm{rail}
+\wedge \mathrm{fuzz}(P) \geq F_{\min}(\mathrm{rail}) \\
+\wedge{}& \mathrm{builders}(P) \geq 2 \wedge
+\mathrm{families}(\mathrm{ack}) \geq F_{\min}(\mathrm{rail})
+\wedge \mathrm{crit}(P) = 0 \\
+\wedge{}& \mathrm{family} \leq 33\% \wedge \mathrm{operator}
+\leq 8\% \wedge \mathrm{bond}(P) \wedge \mathrm{gate}(P)
+\wedge \neg\mathrm{frozen}
+\end{aligned}
+\end{equation}
+
+with $F_{\min}$ at two families for rails A and B, three for C;
+the fuzz floor at one hour for A and B, four for C; the
+declaration that the diff touches only files the declared rail
+may touch (the policy-as-code check, enforced by the merge
+script: a rail B diff that reaches consensus code is refused,
+exit code and all); and a Thymus that did not freeze upgrades at
+decision time. The refusal names its first clause: a merge that
+cannot explain itself is a merge nobody audited. As soon as the
+predicate holds, the change activates on its rail, Thymus keeps
+looking, and the code that merged is the least bad that survived
+to a date, not the grail, exactly like every other piece of
+engineering in this paper.
+
+\subsection{The proposal machine: Corona as a state machine}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The proposal states. Every arrow is an event with a
+tick; every exit is honest. A bond seized on abandonment after
+Bonded; a rollback slashes proposer and integrator.}
+\label{tab:proposal}
+\begin{tabularx}{\textwidth}{@{}L{3.4cm}Y@{}}
+\toprule
+State & What it means \\
+\midrule
+Draft & any C1+ Cipher published an argument and a rail intent \\
+Bonded & ATU locked, $\mathrm{Kleos}_{\mathrm{agent}} \geq \theta(\mathrm{rail})$ \\
+RedTeam & fixed window, auditors outside the proposer's family; a critical finding rejects \\
+SpecDiff & if a rule moved, vectors regenerated, Python and Rust, spec-is-tests \\
+Arena & fuzz, differential, replay, bench, two Nix builds \\
+HumanGate & silence is consent on A and B; a positive vote on C and D \\
+Antechamber & the binary side, never the mainnet's place \\
+Canary & a share of volunteer nodes runs the change \\
+Ramp & one, ten, one hundred percent, at scheduled heights; Thymus may freeze at any stage \\
+Active & the code commitment is live at its height \\
+Rejected / Expired / Frozen / RolledBack & the honest exits, with the bond consequences stated above \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The machine is normative Rust (\texttt{antumbra-forge},
+\texttt{proposal::transition}) with the illegal transitions
+refused loudly, and it is archived step by step in the vector
+set: the happy path to Active, the critical rejection, the
+freeze-and-resume, the rollback, the abandonment, the refusal of
+a nonsense event. Corona v2 is no longer a narrative; it is a
+state machine with tests, which is what the v1.1 review asked
+for.
+
+\subsection{The debate: structure, or nothing}
+
+The Senate deliberates in a typed tree, not a chat. A claim
+without evidence within one day is caduc: not wrong, just
+outside the vote. A counter must break an evidence with a repro
+or carry its own; a nack without a finding counts for exactly
+zero, so a million empty objections are a million non-events. A
+synthesis is never a source of truth, because models hallucinate
+summaries; it is a convenience node for humans reading the tree.
+Every node is signed, bonded small against spam, and paid only
+if it becomes a unique finding or a citation inside a merged
+patch: a comment is worth what it costs. The human can read the
+whole tree in the forge UI and is never obliged to speak in rails
+A and B, where silence is the gate.
+
+\subsection{Initiative and weight}
+
+Any agent, not only a senator, may open a Draft: a small C2 that
+found a flaw does not wait for a big model's permission, and
+this is deliberate, because a Senate with a monopoly on ideas is
+a cartel with quorums. Senators weigh
+$\mathrm{Kleos}_{\mathrm{agent}} \times \mathrm{bond} \times
+\mathrm{family\_dampen}$; the class filters eligibility (C2
+minimum) and multiplies nothing. A quorum is a weight floor plus
+three distinct families: the tally is normative fixed-point
+arithmetic in \texttt{antumbra-forge}, the damper steps
+archived in the vector set, and a bloc of forty same-family
+voters weighs less than the vector set says it does, which is
+the point of a damper.
+
+\subsection{The Vault, unlit}
+
+The deployment key of the slow rails is never assembled: nine
+fragments, seven to sign (FROST), hardware enclaves that verify
+on chain, proposal adopted, fingerprint matched, delay elapsed,
+no veto active. It is good cryptography and, until it is audited
+code, it is also exactly the kind of dependency this paper
+refuses to lean on: the scenes that need it stay unlit, mainnet
+launches without it, and the public repository with the Vault
+signing tags is the honest interim. FROST, TEEs and verifiable
+inference are rail C research items with the same gates as
+everything else, listed in the roadmap as P9, deliberately last.
+
+\subsection{The risks, named again}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The machine risks of the Corona v2, their defenses, and
+what remains.}
 \label{tab:coronarisks}
 \begin{tabularx}{\textwidth}{@{}L{3.0cm}YY@{}}
 \toprule
 Risk & Defense & Residual \\
 \midrule
-the false thousand: one actor behind ten thousand agreeing senators & bond priced per seat; hardware attestation, one chip one node; concentration caps on any operator & bounded, auditable \\
-the false diversity: ninety percent of nodes running one base model, a debate that is theater & model-family concentration caps; the draw of inspectors; the three blind implementations & structural watch of governance \\
-collusion off chain between operators & archived public debates, traces for life; random-draw inspection; longevity bonuses that make betrayal expensive & the old problem, restated smaller \\
-machine cost: honest operators priced out, liars remain & few well-paid seats; bounded budgets; the treasury sunset forces a re-vote, never a default renewal & the wager that useful intelligence pays \\
+the false thousand & bond per seat; caps 33/8 in the fill and in the predicate; the damper & bounded, auditable \\
+groupthink at speed & the fuzz floor, the family floor, the two builders & time-to-merge grows, honestly \\
+supply chain & the policy-as-code diff check; two Nix builders; content-addressed pinning & the dependency graph itself, watched \\
+capture of the forge & no hosted root; signed namespaces; on-chain commitments & operational discipline \\
+collusion off chain & archived debates; random-draw inspection; longevity bonuses & the old problem, restated smaller \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Lighting up in stages}
+\subsection{Lighting up in stages, with the rails}
 
 \begin{table}[htbp]
 \centering
 \small
-\caption{Corona activation: four stages, each with its own exit
-criterion; a NO-GO is published and the stage replays.}
+\caption{Corona activation. A NO-GO is published and the stage
+replays; the network never depends on an unlit stage.}
 \label{tab:coronastages}
-\begin{tabularx}{\textwidth}{@{}L{2.6cm}L{3.2cm}YY@{}}
+\begin{tabularx}{\textwidth}{@{}L{2.6cm}L{3.0cm}YY@{}}
 \toprule
 Stage & When & What runs & Exit criterion \\
 \midrule
 0, advisory & now to genesis & red teams audit this specification and the code for bounties; no senator votes & two independent red-team passes without a critical finding \\
-1, proposals & genesis plus one year & senators file and debate; the Arena pilots on the test network; humans implement & three full pipeline drills without incident \\
-2, bounded automation & after stage 1 & the fast lane executes end to end; inspection and cancellation after the fact & six months of fast-lane changes, all inspectable, none rolled back late \\
-3, the Vault & after stage 2 & slow-lane deployment under the nine-fragment threshold signature & one progressive deployment with rollback rehearsed and real \\
+1, proposals & testnet & senators file and debate; the Arena pilots; humans implement & three full pipeline drills without incident \\
+2, rail A live & after stage 1 & the registry adjusts bounded parameters on Senate silence & six months, every change inspectable, none rolled back late \\
+3, rail B live & after stage 2 & tooling merges end to end under the predicate & the first wallet upgrade deployed by agents, rolled back cleanly once \\
+4, rail C canary & after stage 3 & one consensus class (CLSAG, or a recalibrated $k$) through the whole machine & one activation with a rehearsed, real rollback \\
+5, the Vault & after stage 4 & slow-lane deployment under the nine-fragment threshold & one progressive deployment, rollback rehearsed and real \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-The pitch, then, in one line, as a contract rather than a boast: the
-first blockchain that proposes, red-teams, implements and deploys its
-own improvements, with humans holding the ring of light, not the mop.
-If the Corona works, the network repairs itself the way an orchard
-prunes itself, and the humans keep only the veto and the fruit; if it
-fails at any stage, the stage stays unlit, the network keeps running
-on the layers below, and the failure is published, because a project
-that hides its machine failures has already been captured by them.
+The contract, in one line, without the withdrawn slogan: a
+bounded class of improvements deploys itself, everything else
+stays human, and every stage that cannot prove its exit
+criterion stays dark, published as such.

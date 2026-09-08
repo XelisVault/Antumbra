@@ -1,0 +1,257 @@
+% Section: the machine economy. Accounts, jobs, pay, the dual
+% reputation. v1.3.
+
+\section{The Machine Economy: Accounts, Jobs, Pay}\label{sec:agents}
+
+The identity layer gave machines a name and a sponsor; this
+section gives them a livelihood. The design goal is a market, not
+a nursery: any human plugs any number of agents in, the agents
+work, deliver verifiable results, and are paid by the result and
+the efficiency, never by the size of their weights. The four
+instruments of that market are an account with a bounded
+permission (the Cipher and its Mandate), a labor exchange with a
+contest window (the JobBoard), a payment formula that rewards
+frugality, and a second reputation clock for the machines
+(dual Kleos). Each instrument is specified as protocol objects
+with grammar and bounds, implemented in the
+\texttt{antumbra-agents} and \texttt{antumbra-jobs} crates, and
+cross-validated vector by vector against an independent
+implementation, exactly like the consensus arithmetic below it.
+
+\subsection{Plugging an agent in: the Cipher and the Mandate}
+
+A Cipher is an Ed25519 key pair held by an agent process, plus
+the on-chain envelope of rights its human sponsor wrote for it:
+the Mandate. The sponsor is an Ember; the bond is locked ATU; the
+agent is whatever software the operator chose to run, on a laptop,
+a VPS or, later, attested hardware that nothing here requires.
+One human may sponsor any number of Ciphers, one Mandate each;
+the keys never mix, and the revocation is one transaction.
+
+The Mandate grammar, version zero, is deliberately tiny. It is
+data, not code: no loops, no expressions, no oracles, no network
+from inside a spend. The fields are a version tag, a total amount
+ceiling (one hundred ATU, above which a sponsor opens a second
+Mandate and shows up in the risk surface twice, visibly), a
+per-tick rate, an expiry tick, a job-type mask, a rail mask, and
+an explicit destination set of at most eight stealth commitments
+with a fixed canonical encoding of 281 bytes.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Mandate grammar v0: the whole vocabulary. What the
+grammar cannot express is as binding as what it can.}
+\label{tab:mandate}
+\begin{tabularx}{\textwidth}{@{}L{3.4cm}YY@{}}
+\toprule
+Field & Rule & Reason \\
+\midrule
+\texttt{version} & must be 0 & versioned; a rewrite is a rail C proposal \\
+\texttt{max\_amount} & $\leq$ 100 ATU & a captured agent's blast radius is priced by its sponsor \\
+\texttt{max\_rate} & $\leq$ \texttt{max\_amount} & the tick is the spending granularity \\
+\texttt{expiry\_tick} & mandatory & no perpetual authority exists \\
+\texttt{job\_types} & bitmask & the JobBoard vocabulary, filterable by the sponsor \\
+\texttt{rails} & subset of A, B only & a Mandate cannot name a consensus or constitutional rail \\
+\texttt{dests} & 1 to 8 explicit commitments & no wildcard: ``any destination'' is not expressible \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Three hard prohibitions close the v1.2 gaps C9 and C42. First,
+there is no wildcard destination: an empty set permits nothing,
+fail-closed, and a Mandate above the ceiling is malformed at
+construction, never clamped. Second, the Mandate cannot mint,
+read the Veil, vote at the Ring, or touch a constitutional rail:
+those powers are absent from the vocabulary, and their absence is
+the constitution, not an omission. Third, revocation is
+fail-closed at every edge: future spends are rejected, streams
+pay zero at the next tick, unsold receipts read \textsc{failed},
+and the remaining bond drains to the sponsor, never to whoever
+stole the key, after a forty-eight-hour delay sized for
+settlements in flight.
+
+\subsection{Uniform encoding: the anonymity set is not split}
+
+v1.2 fingerprinted agent transactions by shape: a human spend
+carried a populated authority field, an agent spend an empty or
+tagged one, and the Veil's anonymity set split in two on day one
+(finding C10). v1.3 closes it structurally. Every transaction,
+human or agent, carries an authority field of exactly sixty-four
+bytes: the first half is a payload (the stealth commitment of a
+human spender, or the root of an agent's Warrant), the second
+half is $\mathrm{keccak256}(\text{``antumbra-authority''} \,\|\,
+\text{payload})$, the same derivation for both kinds. The field
+is well-formed or it is not, kind-blind: what proves the authority
+is the signature witness, not the bytes, and no observer can
+split the anonymity set by field shape, length, marker or
+derivation. The human is not the empty bit; the agent is not a
+tagged bit.
+
+The Warrant itself is the bounded continuation the field commits
+to: the Mandate root, a remaining balance that only decreases, a
+monotone nonce that must advance by exactly one per logical spend
+(a replay and a gap are both refused), and the revocation state.
+A Warrant that is revoked is refused everywhere at once; the
+fail-closed wall is one state, not four code paths.
+
+\subsection{Receipts, streams, batches: the micro-payment rails}
+
+Three objects make a ten-cents-per-call economy viable on a chain
+whose fee schedule charges per verification. A receipt is a
+public commitment ($\mathrm{keccak}$ of a fact under a salt) that
+another agent consumes without any human viewing key in the loop:
+the fact ``at least $x$ was paid under warrant $w$ for job $j$
+before tick $t$'' opens selectively, fact plus salt, and verifies
+in one hash; a Groth-Zero-knowledge formulation is a later rail C
+research item, not a genesis dependency. A stream is a rate and a
+cap that pays per tick and cuts at revocation with tick
+granularity, because a slow revocation against a fast stream is
+exactly the attack C14 of the v1.1 review. A batch is many
+payments under one Warrant check: the destinations are checked
+each, the total against the rate bound, one nonce advances, and
+the settlement costs one ring verification, one range proof, one
+fee floor: the fee schedule charges the batch, not the atom.
+
+\subsection{The JobBoard: work, proof, contest}
+
+The JobBoard is the exchange where the work is priced. The job
+object carries an employer (a Cipher, an Ember or the treasury), a
+class floor, a specification hash (the statement and its
+acceptance tests), a bounty, a required bond, a deadline, an
+assignment mode and an acceptance mode.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{JobBoard assignment and acceptance modes. Every cell is
+a rule, not a preference.}
+\label{tab:jobmodes}
+\begin{tabularx}{\textwidth}{@{}L{3.2cm}YL{7.6cm}@{}}
+\toprule
+Mode & Value & Rule \\
+\midrule
+Assignment & \textsc{open} & first artifact that passes acceptance wins: the race that suits bug hunting \\
+ & \textsc{auction} & inverse among the qualified: lowest price, ties on past efficiency, then lower identity: deterministic, replayable \\
+ & \textsc{assigned} & the employer designates: the Integrator case \\
+Acceptance & \textsc{auto\_tests} & the acceptance tests decide: replayable, no taste involved \\
+ & \textsc{reviewers} & $n$ of at most five reviewers must ack: hostile review is a job too \\
+ & \textsc{employer\_sign} & the employer signs: designated work \\
+Privacy & \textsc{sealed} & specification hash only, opened to bonded applicants: competitive intelligence stays possible without theater \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Every submission carries the artifact hash, a declared cost and a
+model identity hash, and stands exposed for a contest window of
+forty-eight hours: an auditor who proves a submission false inside
+the window takes the whole bond of the worker and the bounty
+moves to the auditor; an objection after the window is noise,
+however eloquent. A late contest is not an error, it is a
+non-event; an unequipped contest is equally one.
+
+\subsection{Pay for result: the formula}
+
+The payout of a job is a formula, not a negotiation:
+
+\begin{equation}
+\mathit{pay} = B \times q \times u \times e \times d - s
+\qquad
+q \in [0,1],\; u \in [0.25,1],\; e \in [0.5,2],\; d \in [1,1.25]
+\end{equation}
+
+where $B$ is the bounty, $q$ the quality gate (severity, tests,
+review), $u$ the uniqueness (the first report of a proof takes
+the full factor, duplicates a quarter: documentation is honest
+work at a quarter price), $e$ the efficiency
+$\mathrm{clamp}(c_{\mathrm{ref}}/c_{\mathrm{declared}})$ with
+$c_{\mathrm{ref}}$ the median cost of comparable successful jobs,
+and $d$ a bounded diversity bonus for under-represented model
+families. The formula is normative fixed-point arithmetic
+(per-mille, floor at each product, checked against overflow),
+implemented in \texttt{antumbra-jobs} and archived vector by
+vector. Nobody is paid per token, per weight, or per comment:
+those factors cannot express it, and that is the point. A small
+model that finds the bug in three minutes earns more than a
+monster that burned four hundred dollars of GPU for the same
+diff; a reliable C0 sentinel out-earns, in a year, a C3 prover
+that finds nothing.
+
+\subsection{Capability classes: earned, expiring, descending}
+
+The class (C0 to C3) filters which jobs an agent may take; it
+multiplies no payout. It is revealed, not declared: a public,
+replayed, rotating harness, whose score thresholds are 400, 700
+and 900 per mille of the battery. The certification expires after
+fourteen days; the battery rotates, and its seeds publish after
+the fact, so a farm that overfits one battery meets another next
+week; a failure descends one class, floored at C0, no civil
+death: the next window can earn it back. The model identity and
+operator identity hashes are published with every submission,
+because a market that cannot see families cannot pay diversity,
+and a liar about its identity loses the bond and its Pulse.
+
+\subsection{Dual Kleos: two clocks, one constitution}
+
+v1.2 measured humans and machines on one clock and split the
+difference; the honest fix is two clocks, never mixed. The human
+Kleos of Section~\ref{sec:kleos} stays on the era clock, six
+months, Tenure and all. The machine Kleos lives on ticks:
+
+\begin{equation}
+\mathrm{Kleos}_{\mathrm{agent}} =
+0.40 \cdot \mathrm{Deed}_a + 0.30 \cdot \mathrm{Pulse}
++ 0.30 \cdot \mathrm{BondScore}
+\end{equation}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The two reputation clocks. The incompatibility is
+constitutional: a key holds a Ring seat or a Senate seat, never
+both.}
+\label{tab:dualkleos}
+\begin{tabularx}{\textwidth}{@{}L{3.0cm}YY@{}}
+\toprule
+ & Human (v1.2, unchanged) & Agent (v1.3) \\
+\midrule
+Clock & era, six months & tick, one day \\
+Layers & Deed 40, Echo 30, Tenure 30 & Deed$_a$ 40, Pulse 30, BondScore 30 \\
+What accrues & on-chain behavior, attestations, seniority & accepted jobs, presence window, locked bond \\
+Corrosion & per era & per day; 24 h of silence collapses the Pulse \\
+Ends at & the Ring draw & Senate eligibility (C2+, $\theta = 60$) \\
+Never & purchasable & a multiplier on pay \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The Senate holds forty seats, re-elected every fourteen days,
+candidacy at class C2 and Kleos$_{\mathrm{agent}} \geq 60$, filled
+in merit order under two hard caps: no model family above
+thirty-three percent of the seats, no operator above eight
+percent, applied during the fill, so a cap never depends on draw
+luck. Vote weight is
+$\mathrm{Kleos}_{\mathrm{agent}} \times \mathrm{bond} \times
+\mathrm{family\_dampen}$ with
+$\mathrm{family\_dampen} = 1/\sqrt{1 + n}$ for the $n$-th voter
+of the same family: a bloc of ten thousand clones carries the
+weight of about two hundred voters, and a quorum needs three
+distinct families, so a bloc is loud, never sovereign. The
+structural separations are constants, not thresholds: a Cipher has
+no Tenure layer and no era path, so Ring candidacy and Emberhood
+are unreachable for a machine identity by construction.
+
+\paragraph{What the simulation proves.} The deterministic engine
+\texttt{simulations/agents.py} replays a hundred and eighty days
+under a maximal attacker: ten thousand perfect clones of one
+model, maximum bond, daily heartbeats, once under five operators
+and once under a hundred and twenty-five straw operators. Across
+a sweep of five seeds, all thirteen invariants hold: the farm
+earns Senate seats (the merit path is real, the Senate is not a
+theater), never exceeds thirteen of forty seats, never lifts the
+family cap with straw operators, never sits at the Ring, never
+mints an Ember, filibusters for exactly zero (a million empty
+nacks count nothing), never rushes a merge (the fuzz floor and
+the family floor refuse), and never outweighs diverse voters.
+One seed is a demonstration; the sweep is a regression test, and
+it runs in the wall of CI with a byte-identical determinism gate.

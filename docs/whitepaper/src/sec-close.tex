@@ -8,7 +8,7 @@ because a mitigated risk is not a vanished risk, their residual status
 stated in plain words. That discipline is not decorative: the previous
 sections showed that a social specification judged solid could fall
 before its own simulation; the present section applies the same
-requirement to the whole assembly, before an external audit takes it
+requirement to the whole assembly, before an independent review takes it
 over again, phase by phase, on the roadmap of Section~\ref{sec:roadmap}.
 
 \begin{table}[htbp]
@@ -30,6 +30,7 @@ strict-cap failure (long-term security) & medium & payment volume as the fee res
 the false thousand (Corona sybil) & medium & bond per senate seat; hardware attestation, one chip one node; concentration caps & bounded, auditable, staged activation \\
 false diversity (one base model) & medium & model-family caps; random-draw inspection; three blind implementations in the Arena & a standing watch of governance, not a solved problem \\
 machine cost (honest operators priced out) & medium & few well-paid seats; bounded treasury budgets; sunset forces a re-vote & the wager that useful intelligence pays, tested small before large \\
+transaction fingerprinting by authority shape & medium & uniform sixty-four-byte authority field, same derivation for human and agent spends (v1.3) & closed structurally; the test is in the vector set \\
 biometric debt & none & no body data collected, anywhere, ever & none; nothing to leak \\
 \bottomrule
 \end{tabularx}
@@ -51,8 +52,8 @@ data.
 \section{The Zero-Defect Method}\label{sec:method}
 
 The question that closes every conversation about this project is the
-right one: will you be able to code all of that without a single fault?
-The honest answer begins with an admission: nobody can promise it, and
+right one: can all of that be coded with zero faults? The honest
+answer begins with an admission: nobody can promise it, and
 whoever promises it is selling something. Bitcoin itself, the most
 scrutinized implementation in the world, nearly failed twice. An integer
 overflow created one hundred eighty-four billion bitcoins in one
@@ -67,7 +68,7 @@ which method catches faults before attackers do.
 \subsection{Two captured specimens}
 
 Before the specimens, one event worth recording, because it is the
-method working on the method: the first external audit of version 1.1
+method working on the method: the first independent review of version 1.1
 (September 2026, an independent reviewer) returned twelve findings,
 factual and design-level, from a wrong RandomX memory figure to the
 unspecified bootstrap of the Ring. Version 1.2 closes the twelve:
@@ -122,7 +123,7 @@ economic rules before any code, which reveals design flaws. Third layer:
 reproducible builds and continuous massive random testing, which reveal
 non-determinisms and unexpected states. Fourth layer: systematic
 cross-review between the project holder and his assistant, two pairs of
-eyes, two reading conventions. Fifth layer: external audit of the
+eyes, two reading conventions. Fifth layer: independent review of the
 differential at every phase, because a fresh auditor does not have the
 author's blind spots. Sixth layer: measurable GO and NO-GO exit criteria
 at every roadmap phase, with the rule that a NO-GO remains an acceptable,
@@ -141,7 +142,7 @@ its capture, and that is the only promise an honest engineer can make.
 \section{Roadmap and Conclusion}\label{sec:roadmap}
 
 The first version of this paper pinned an eighteen-month calendar to
-genesis, and the external audit called it what it was: a schedule for a
+genesis, and the independent review called it what it was: a schedule for a
 skeleton of the scope. Monero, Kaspa and Xelis each spent years on one
 of this project's subsystems. The honest form of a roadmap is
 criteria-driven: the phases below carry month ranges as planning aids
@@ -157,7 +158,7 @@ fast-converging DAGs for the ordering layer; everything that is new,
 Kleos, the Ring, the Lumen, Cipher perimeters, Mandates, the Corona,
 is
 deterministic, testable, auditable code, with no exotic primitive
-before external audit. Every
+before independent review. Every
 phase carries one measurable deliverable and one binary exit criterion;
 an unmet criterion is not a shameful failure, it is steering data, and
 the phase replays until it is met.
@@ -175,9 +176,41 @@ Phase & Months & Measurable deliverables & Exit criterion \\
 1, specification & M1-M3 & written protocol, numbered architecture decisions, format sketches, extended social-core simulation with the seed sweep, red-team bounties of Corona stage 0 & specification read by two external readers; first audit findings closed \\
 2, DAG prototype & M4-M8 & dev network mining a CPU DAG at two seconds, stem propagation, the capacity budget measured & twenty-four hours without unexpected reorganization; 100 tx/s sustained on the reference node \\
 3, Ring and Kleos v0 & M9-M13 & signed checkpoints, Deed score computed, era rotation replayed, the bootstrap ratchet drilled & finality under six seconds over one hundred thousand replayed blocks \\
-4, identities and Lumen & M14-M18 & Embers with sponsorship, Ciphers with warrants and fallback Mandates, bounded viewing keys, external audit of the differential & audit without a critical flaw \\
+4, identities and Lumen & M14-M18 & Embers with sponsorship, Ciphers with warrants and fallback Mandates, bounded viewing keys, independent review of the differential & audit without a critical flaw \\
 5, public test network & M19-M23 & faucet, explorer, one hundred nodes, agent load simulator, upgrade ritual repeated three times, Arena drills & three consecutive upgrades without incident; 300 tx/s burst validated or the target dropped \\
 6, genesis & M24 at the earliest & public ceremony, signed executables for five platforms, Lumen documentation for authorities published & all previous criteria, without exception \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The machine layers above the settlement core follow their own
+criteria-driven tracks, deliberately decoupled from the settlement
+calendar: the chain must be born solvent and private even if every
+machine layer stays dark, and every machine layer must be born testable
+even if the chain is late. The binding order is the dependency order,
+and every track is a published NO-GO until its criterion is green.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The machine-economy tracks. Settlement genesis needs P0 to P3
+only; the rest may light on testnet or later, and the network never
+depends on an unlit track.}
+\label{tab:machinetracks}
+\begin{tabularx}{\textwidth}{@{}L{3.4cm}YL{5.6cm}@{}}
+\toprule
+Track & What lands & Exit criterion \\
+\midrule
+P0, the node & \texttt{antumbra-node} assembled, honest devnet status, minimum invariants, a day of DAG & twenty-four hours of blocks with conservation and tip invariants held \\
+P1, spec-is-tests & genesis Ember table, dual Kleos vectors, the agent-farm simulation in CI & every equation of v1.3 cross-validated, bit for bit \\
+P2, Thymus toy & invariants, canaries, alerts, freeze, bounty accounting, MTTD metrics & the nine invariants replay by a Sentinel, not only by a node \\
+P3, machine accounts & Warrants, uniform encoding, Mandate grammar v0, receipts, streams, batches & the anonymity-set split closed, measured, in the vector set \\
+P4, JobBoard & jobs, classes C0--C2, pay-for-result, contest window & scripts earn test ATU end to end on testnet \\
+P5, forge & signed namespaces, policy-as-code rails, Arena, \texttt{merge\_ok} for rail B & first tooling merge by agents, rolled back cleanly once \\
+P6, rail A & the registry, Senate silence, bounded changes & first parameter adjusted, inspected after the fact \\
+P7, Senate and debate & ArgNode, dampened tally, quorum floors & a hostile red-team review of the tally itself \\
+P8, rail C canary & one consensus class through the whole machine & one activation with a rehearsed, real rollback \\
+P9, the Vault & FROST, TEEs, verifiable inference & unlit by design until audited code exists; mainnet launches without it \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -209,9 +242,10 @@ identities, flows, kept by construction; around it, the ring of
 verification, reputation, finality, compliance proofs, which anyone can
 switch on without exposing anyone other than oneself. Around the ring
 itself, one more loop is sketched and deliberately left unlit until its
-stage criteria are met: the Corona, machine governance under human
-veto, the network learning to prune its own orchard while the humans
-keep the fruit. The specification
+stage criteria are met: the Corona v2, a bounded class of changes that
+deploy themselves under a diverse predicate, a human gate and an
+immunity organ, the network pruning its own orchard while the humans
+keep the veto and the fruit. The specification
 was written to be attacked before being implemented, and that is the
 only honest way to write a whitepaper. To work.
 

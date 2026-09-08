@@ -1,0 +1,29 @@
+# The evolution layer: the Forge, the Arena, the Senate (ADR-024,
+# ADR-025).
+#
+# The merge predicate (policy-as-code: rail, files, fuzz,
+# builders, families, caps, bond, human gate, Thymus), the
+# bounded ParameterRegistry of rail A, the Proposal state
+# machine (Draft to Active, with the freeze and the rollback),
+# the structured debate (claims need evidence, nacks need
+# findings, syntheses are never truth), and the Senate tally
+# (weight dampened by family, quorum diverse by definition).
+# Cross-validated against an independent implementation
+# (code/scripts/gen_forge_vectors.py) over an archived vector
+# set (tests/vectors.json).
+
+[package]
+name = "antumbra-forge"
+description = "ANTUMBRA evolution layer: merge predicate, parameter registry, proposal machine, debate, Senate tally"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

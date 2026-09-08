@@ -157,7 +157,7 @@ jobs:
       - name: Install generator dependencies
         run: pip install -r scripts/requirements.txt
         working-directory: code
-      - name: Regenerate the six vector sets
+      - name: Regenerate the ten vector sets
         run: |
           python3 scripts/gen_vectors.py
           python3 scripts/gen_tx_vectors.py
@@ -165,6 +165,10 @@ jobs:
           python3 scripts/gen_dag_vectors.py
           python3 scripts/gen_ring_vectors.py
           python3 scripts/gen_kleos_vectors.py
+          python3 scripts/gen_immune_vectors.py
+          python3 scripts/gen_agents_vectors.py
+          python3 scripts/gen_jobs_vectors.py
+          python3 scripts/gen_forge_vectors.py
         working-directory: code
       - name: The archived vector sets are well-formed
         run: |
@@ -173,7 +177,7 @@ jobs:
           import json
 
           files = sorted(glob.glob("crates/*/tests/vectors.json"))
-          assert len(files) == 6, f"expected 6 archived vector sets, found {len(files)}"
+          assert len(files) == 10, f"expected 10 archived vector sets, found {len(files)}"
           for path in files:
               with open(path, encoding="utf-8") as handle:
                   data = json.load(handle)
@@ -202,6 +206,9 @@ jobs:
       - name: Emission calendar (cap must be exact)
         run: python3 emission.py
         working-directory: simulations
+      - name: Machine-economy simulation (caps and Senate must hold)
+        run: python3 agents.py
+        working-directory: simulations
       - name: Determinism gate (two runs, byte-identical stdout)
         run: |
           python3 kleos.py > /tmp/kleos-run1.txt
@@ -210,7 +217,10 @@ jobs:
           python3 emission.py > /tmp/emission-run1.txt
           python3 emission.py > /tmp/emission-run2.txt
           cmp /tmp/emission-run1.txt /tmp/emission-run2.txt || { echo "emission.py output is not deterministic"; exit 1; }
-          echo "determinism: both engines are byte-identical across runs"
+          python3 agents.py > /tmp/agents-run1.txt
+          python3 agents.py > /tmp/agents-run2.txt
+          cmp /tmp/agents-run1.txt /tmp/agents-run2.txt || { echo "agents.py output is not deterministic"; exit 1; }
+          echo "determinism: all three engines are byte-identical across runs"
         working-directory: simulations
 
   whitepaper:

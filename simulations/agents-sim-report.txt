@@ -1,0 +1,47 @@
+ANTUMBRA machine-economy simulation (dual Kleos, v1.3 rules)
+==============================================================================
+
+population : 500 honest agents in 20 families, a farm of 10000 clones of one model
+agent clock: 180 days of ticks, a Senate of 40 seats, re-elected every 14 days
+kleos_agent: 0.4 * Deed_a + 0.3 * Pulse + 0.3 * BondScore (caps 40/30/30, normalized to 100)
+attacks    : A1 farm, A2 straw operators, A3 filibuster, A4 groupthink, A5 bloc voting
+
+seed 1618: ALL INVARIANTS HOLD
+  PASS  I1 family cap            max family share 0.325
+  PASS  I2 operator cap          max operator share 0.075
+  PASS  I3 farm seats exist      farm seats 13 at best
+  PASS  I4 farm minority         farm seats 13 <= 13
+  PASS  I5 straw operators capped straw family seats 13
+  PASS  I6 no Cipher at Ring     ring seats held by Ciphers 0
+  PASS  I7 no Ember from farm    embers from the farm 0
+  PASS  I8 filibuster ignored    counted empty Nacks 0
+  PASS  I9 equipped Nacks count  counted equipped Nacks 12
+  PASS  I10 groupthink refused   merge_ok(groupthink) is False
+  PASS  I11 honest merge passes  merge_ok(honest) is True
+  PASS  I12 family floor         merge_ok(one family) is False
+  PASS  I13 damper sub-linear    bloc of 10 000: 19854 = 199 voters of weight, not 10 000
+
+  elections run        : 12
+  farm senators (sum)  : 156
+  farm seats at best   : 13 of 40
+  honest seats at best : 27 of 40
+  straw-operator seats : 13 (the family cap binds)
+  farm share of filled : 0.33 (bootstrap: never a quorum alone)
+  bloc of 10 000       : 199 voters of weight (damper), quorum needs 3 families
+
+seed 1619: ALL INVARIANTS HOLD
+
+seed 1620: ALL INVARIANTS HOLD
+
+seed 1621: ALL INVARIANTS HOLD
+
+seed 1622: ALL INVARIANTS HOLD
+
+Verdict: the farm of ten thousand clones of one model
+  - CAN earn Senate seats (the merit path exists),
+  - CANNOT exceed 33% of the seats, nor dodge it with straw operators,
+  - CANNOT sit at the Ring or mint an Ember (structural no-go),
+  - CANNOT filibuster (empty Nacks ignored),
+  - CANNOT rush a merge (fuzz floor, family floor),
+  - CANNOT outweigh diverse voters (the damper).
+

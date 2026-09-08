@@ -126,6 +126,20 @@ for path in targets:
 print(f"yaml check: {len(targets)} files parse")
 PYEOF
 
+# ── The honest-language watch (ADR-023) ──────────────────────────
+# Banned sentences sell more than the design delivers. The register
+# is closed; the grep must stay empty.
+banned_hits=$(grep -rInF -e "first blockchain that deploys" \
+  -e "without a single fault" \
+  -e "faultless network" \
+  -- *.md docs/whitepaper/src/*.tex 2>/dev/null | head -5 || true)
+if [ -n "$banned_hits" ]; then
+  printf 'HYGIENE: banned sentences found (ADR-023 register):\n%s\n' \
+    "$banned_hits" >&2
+  fail=1
+fi
+cd "$root" || exit 1
+
 if [ "$fail" -ne 0 ]; then
   printf 'HYGIENE: FAILED (%s text files checked)\n' "$checked" >&2
   exit 1

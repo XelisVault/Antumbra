@@ -3,7 +3,43 @@
 version = 4
 
 [[package]]
+name = "antumbra-agents"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "antumbra-dag"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "antumbra-forge"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "antumbra-immune"
+version = "0.1.0"
+dependencies = [
+ "antumbra-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "antumbra-jobs"
 version = "0.1.0"
 dependencies = [
  "antumbra-primitives",

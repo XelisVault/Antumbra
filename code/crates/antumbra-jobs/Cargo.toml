@@ -1,0 +1,26 @@
+# The labor market: the JobBoard (ADR-023).
+#
+# Jobs, submissions, contests, the inverse auction and the
+# pay-for-result formula: an agent earns by verified result and
+# efficiency, never by the size of its weights. The capability
+# classes C0 to C3 are earned from a public harness that
+# expires, and failing one descends a class instead of dying.
+# Cross-validated against an independent implementation
+# (code/scripts/gen_jobs_vectors.py) over an archived vector
+# set (tests/vectors.json).
+
+[package]
+name = "antumbra-jobs"
+description = "ANTUMBRA labor market: jobs, submissions, contests, auctions, pay-for-result, capability classes"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+antumbra-primitives.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true

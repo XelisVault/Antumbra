@@ -13,18 +13,20 @@ whitepaper; this document is its executable version.
    identical results over a generated and archived set of test vectors.
    A convention fault is not found by re-reading: it is crossed.
 2. **Deterministic simulation before code.** Every social or economic
-   rule (Kleos, sponsorships, the Ring draw, emission) is simulated
-   first: fixed seed, numeric invariants, maximum attack replayed. See
-   `simulations/kleos.py`, which revealed and fixed the flaw of the v2
-   specification.
+   rule (Kleos, sponsorships, the Ring draw, emission, the machine
+   economy) is simulated first: fixed seed, numeric invariants, maximum
+   attack replayed. See `simulations/kleos.py`, which revealed and
+   fixed the flaw of the v2 specification, and `simulations/agents.py`,
+   which attacks the v1.3 machine layers with a ten-thousand-clone
+   farm.
 3. **Reproducible builds and random testing.** Executables build
    deterministically; massive random states are replayed continuously
    on the development network.
 4. **Cross review.** Every merge is reviewed by a second person (human
    or assisted), with an archived report.
-5. **External audit of the differential.** At phases 4 and 6 of the
-   roadmap, an external auditor re-reads the complete differential
-   since the previous phase.
+5. **Independent review of the differential.** At phases 4 and 6 of
+   the roadmap, an independent reviewer re-reads the complete
+   differential since the previous phase.
 6. **Public GO/NO-GO criteria.** Every roadmap phase has one measurable
    exit criterion; an unmet criterion blocks the next phase, and the
    NO-GO is published.
@@ -90,8 +92,9 @@ blocks the phase, exactly as a NO-GO criterion would.
 | Licenses and bans | any license or duplicate-version violation |
 | Vector regeneration | any divergence between the committed vectors and the Python generators (spec = tests) |
 | Social core regression | any Kleos invariant breach, any emission arithmetic error, any nondeterminism |
+| Machine-economy regression | any Senate cap breach, any structural no-go (no Cipher at the Ring), a farm that beats the damper |
 | Whitepaper build | a whitepaper that no longer compiles, figures whose arithmetic no longer closes |
-| Repository hygiene | conflict markers, trailing whitespace, missing final newlines, invalid UTF-8, unparseable shell/Python/YAML |
+| Repository hygiene | conflict markers, trailing whitespace, missing final newlines, invalid UTF-8, unparseable shell/Python/YAML, banned marketing sentences (ADR-023) |
 | Merge rails | a consensus change without the `rail-c` label, or without an ADR in the diff |
 
 Run the same gates locally before pushing:

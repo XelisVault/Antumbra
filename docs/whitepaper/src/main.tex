@@ -35,7 +35,7 @@
   pdftitle={ANTUMBRA: A Reputation-Anchored Settlement Network for the Human-Machine Economy},
   pdfauthor={XelisVault},
   pdfsubject={Blockchain protocol specification},
-  pdfkeywords={ANTUMBRA, ATU, blockchain, privacy, reputation, BlockDAG, RandomX, CryptoNote, AI governance}
+  pdfkeywords={ANTUMBRA, ATU, blockchain, privacy, reputation, BlockDAG, RandomX, CryptoNote, AI governance, agent economy, Thymus}
 }
 
 \begin{document}
@@ -46,7 +46,7 @@
   {\large A Reputation-Anchored Settlement Network\\for the Human-Machine Economy}\\[9pt]
   {\normalsize XelisVault}\\[2pt]
   {\small\ttfamily xelisvault.xyz \; $\cdot$ \; github.com/XelisVault/Antumbra}\\[2pt]
-  {\small Version 1.2, September 2026}
+  {\small Version 1.3, September 2026}
 \end{center}
 
 \vspace{10pt}
@@ -68,18 +68,26 @@ finality committee of fifty-five seats drawn by reputation rather than
 capital, non-biometric human identities, agents that are accountable by
 construction, and a native three-level disclosure mechanism. The scarce
 resource the network mints is consensus reputation, Kleos: three layers of
-which the heaviest is time itself, which cannot be bought. Above the whole,
-a machine governance layer, the Corona, lets AI senators propose, red-team
-and implement protocol changes under human veto, paid like miners for
-useful work and ruined like miners for attacks. The money supply
-is capped at 16,180,339 ATU, the golden ratio scaled by ten million, issued
+which the heaviest is time itself, which cannot be bought. Above the money,
+a machine economy pays agents by verified result and efficiency through
+bounded Mandates, a labor exchange with a contest window, and a second
+reputation clock for machines, with diversity caps the deterministic
+simulation attacks with ten thousand clones. An immunity layer, the
+Thymus, pays for the chain's own breakage on replayable proof and freezes
+upgrades, never payments. The evolution layer, the Corona v2, is a state
+machine over four rails of change, merged by a diverse predicate under
+human silence or human vote, never by unanimity. The money supply is
+capped at 16,180,339 ATU, the golden ratio scaled by ten million, issued
 over thirty-four four-year eclipses and closed exactly at year 136. The
 specification was attacked by its own deterministic simulation before being
 written down as final: one flaw was found and four corrective rules closed
 it, the engine is public code, and the rules hold on a sweep of twelve
-seeds. A first external audit of version 1.1 returned twelve findings; this
-version closes them. This document is the public reference specification
-for the network.
+seeds. A first independent review of version 1.1 returned twelve findings;
+version 1.2 closed them. Version 1.3 closes the machine-economy gaps of
+the second review: uniform authority encoding, the Mandate grammar, the
+immunity market, the rails, the predicate, and the honest metrics, MTTD,
+MTTC and MTTR, that replace the word perfect. This document is the public
+reference specification for the network.
 \end{abstract}
 
 \vspace{4pt}
@@ -89,7 +97,9 @@ for the network.
 \input{sec-intro}
 \input{sec-tx}
 \input{sec-identity}
+\input{sec-agents}
 \input{sec-gov}
+\input{sec-thymus}
 \input{sec-corona}
 \input{sec-close}
 

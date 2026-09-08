@@ -1,0 +1,145 @@
+% Section: Thymus, the immunity layer. v1.3.
+
+\section{Thymus: Immunity as a Market}\label{sec:thymus}
+
+More important than any governance layer is this one, because
+the models of the next years arrive as attackers first. A chain
+that waits to be attacked elsewhere has already lost the window;
+a chain that pays for its own breakage, automatically, on proof,
+turns the most capable attackers of the era into its most
+productive sentinels. Thymus is that organ: always on, never
+negotiating, structurally unable to stop the money. The honest
+claim it supports is not ``without a fault'' but three published
+numbers, mean time to detect, to contain, to repair, measured on
+chain. Relatively very resistant means this market exists and
+stays solvent; it does not mean the network is perfect, and
+nothing in this paper is allowed to mean that.
+
+\subsection{The nine invariants}
+
+Every node replays them, every Sentinel replays them, and each is
+a test in the Arena. The count is frozen at genesis: an invariant
+that stops being checkable is a rail C change with a full
+proposal behind it, never a silent edit.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The nine invariants of Thymus. Each row is a test, a
+canary family, and a bounty pole the day it breaks.}
+\label{tab:invariants}
+\begin{tabularx}{\textwidth}{@{}L{5.2cm}Y@{}}
+\toprule
+Invariant & The rule, in one line \\
+\midrule
+Conservation & no ATU exists outside the emission calendar, anywhere, ever \\
+Nullifier uniqueness & a nullifier is spent exactly once: the second spend is a fault, not a policy question \\
+Checkpoint in blue set & the Ring orders the DAG; it never invents an order the DAG does not contain \\
+Ring composition & fifty-five seats, term limits, R1, and no Cipher, ever \\
+Mandate perimeter & an agent spend outside its Mandate is rejected by every node \\
+Registry bounds & every live parameter stands inside its $[\min,\max]$ and its cooldown \\
+Code commitment & the active binary hash is the reproducible one that was voted \\
+Fee floor & fees at or above the floor: free spam is a fault \\
+Ring size & every ring is the current parameter: no fingerprint, no bargain ring \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Canaries and alerts}
+
+Canaries are synthetic transactions with known results, run on
+isolated test accounts even on mainnet: a balance delta, a
+nullifier count, a fee total, exact-match checked, every
+deviation an alert. The alert machine is a fixed state transition,
+implemented in the \texttt{antumbra-immune} crate and
+cross-validated vector by vector: an alert is recorded, counted
+in the open-critical metric, and paid if a replayable proof
+follows. Freezing has exactly one trigger and two sources.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The freeze rule. One target, two sources, no committee.}
+\label{tab:freeze}
+\begin{tabularx}{\textwidth}{@{}L{4.6cm}Y@{}}
+\toprule
+Trigger & A critical alert on an upgrade in canary or ramp \\
+Sources & a single replayable proof, OR three distinct Sentinels on the same invariant within ten heights \\
+Effect & the ramp stops; the chain, the payments, the settlements do not \\
+Unfreeze & resolve: the ramp resumes from the stage the freeze caught \\
+Rollback & if an invariant broke inside the responsibility window, the previous hot code commitment returns and the proposer plus integrator are slashed \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{NO-GO, constitutional.} Thymus freezes an upgrade,
+never a payment. The type of an alert target has no payment
+variant: the freeze surface of the protocol cannot express
+``stop the money'', and adding such a variant is a rail D change
+that rewrites this section. A lying Sentinel is a nuisance, not a
+halt: without a proof it needs two honest colleagues to agree
+within the window, and a Sentinel that raises false alerts to
+freeze a rival's upgrade loses its retainer and its bond, because
+the false alert is itself a finding of the invariant that did not
+break. A single lying proof is impossible by construction: the
+proof replays or it does not.
+
+\subsection{The bounty: a market, not a committee}
+
+An alert with a replayable proof (script plus vector) pays
+automatically from the immunity pole, forty percent of the
+treasury budget while the treasury lives. The payout is
+$250\,\mathrm{ATU} \times \sigma \times u$ where $\sigma$ is the
+severity factor (critical 1.0, high 0.5, medium 0.25, low 0.1)
+and $u$ the uniqueness: the first report of a proof hash takes
+the full factor, later reports a quarter, documentation price.
+No committee sits in the loop, no discretion exists to capture,
+and the market becomes more liquid exactly as attacking models
+become more capable: that is the entire thesis, and the reason
+the pole is the largest one. The funding question after the
+treasury sunset is answered where it belongs: a constitutional
+vote of the three chambers recharges the pole, or the bounties
+become private jobs, the v1.2 line, unchanged.
+
+\subsection{The honest metrics: MTTD, MTTC, MTTR}
+
+The word ``perfect'' is banned from this paper, its README and
+its marketing; what replaces it is measured. Mean time to detect
+(the height gap between an injected fault and the first alert),
+to contain (fault to freeze), and to repair (freeze to resolve)
+are on-chain state the machine computes, not adjectives a
+marketing page claims. The phase table sets the targets; a
+scene that cannot measure its target does not light the next
+one. NO-GO, published with the numbers.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Immunity targets by phase. Each target is an exit
+criterion, measured, not narrated.}
+\label{tab:mttd}
+\begin{tabularx}{\textwidth}{@{}L{3.0cm}L{3.2cm}L{4.2cm}Y@{}}
+\toprule
+Phase & MTTD & MTTC & Proof of entry \\
+\midrule
+Prototype & under 1 h, known invariant & manual rollback & fuzz plus the archived vector battery \\
+Testnet & under 10 min & auto-suspend of the upgrade & canaries, 24/7 \\
+Post-genesis & under 2 min & auto-rollback of the binary & Sentinels, bounty market, N hot versions \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{What remains, named}
+
+The residual risk of an immunity market is threefold and
+stated here rather than in a footnote. A state actor that
+outbids the bounty pole can lengthen the window; the defense is
+the pole's size and the diversity of the attacker pool, and the
+residual is real, as in every public chain. A Thymus that stops
+finding is a culture dying, not a system failing: Thymus is not
+a rail anyone may switch off, and its budget is the last line of
+the treasury table. And the metrics themselves are gameable at
+the margin by disclosure timing; the contest window and the
+uniqueness factor price that game. ``Relatively very
+resistant'' is the strongest honest sentence in this section,
+and it is the one the whole layer is built to earn.
