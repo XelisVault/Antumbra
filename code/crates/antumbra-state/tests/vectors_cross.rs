@@ -141,6 +141,7 @@ fn error_name(error: &StateError) -> &'static str {
         StateError::NoInputs => "NoInputs",
         StateError::UnknownOutput(_) => "UnknownOutput",
         StateError::DoubleSpend(_) => "DoubleSpend",
+        StateError::KeyNotBound(_) => "KeyNotBound",
         StateError::ImmatureCoinbase { .. } => "ImmatureCoinbase",
         StateError::Conservation { .. } => "Conservation",
         StateError::OutputCollision(_) => "OutputCollision",
@@ -288,7 +289,13 @@ fn the_ledger_applies_the_generated_orders() {
 #[test]
 fn the_ledger_rejects_and_names_every_rule() {
     let vectors = load_vectors();
-    assert!(vectors.reject.len() >= 16, "the battery covers every rule");
+    // Sixteen single-rule rejections plus the two ADR-026 thefts:
+    // a coinbase output and a transfer output, both correctly
+    // signed by the thief.
+    assert!(
+        vectors.reject.len() >= 18,
+        "the battery covers every rule, the key binding included"
+    );
     for case in &vectors.reject {
         let store = store_of(&case.blocks, &case.order);
         let order: Vec<Hash> = case.order.iter().map(|s| unhex_hash(s)).collect();

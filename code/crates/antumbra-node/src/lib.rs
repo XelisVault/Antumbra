@@ -26,11 +26,13 @@
 //!    a function of the block count and the fixed devnet seeds,
 //!    and two runs of the same day print the same status id.
 //!
-//! The node enforces one rule the ledger does not have yet
-//! (ADR-025, the key binding): an admitted input must claim the
-//! spend key of the output it spends. The consensus-level rule and
-//! its vector set are the next rail-C change; until it lands,
-//! accepting remote blocks is a NO-GO.
+//! The node enforces the key binding twice (ADR-026): the ledger
+//! refuses a mis-bound input in any applied block — the consensus
+//! rule, with its regenerated vector set — and the mempool refuses
+//! it at admission, the cheap feedback in front of the boundary.
+//! P2P block validation is therefore unblocked: a node that
+//! accepts remote blocks rejects theft by the same rule the
+//! devnet day runs under.
 
 pub mod cli;
 pub mod devnet;

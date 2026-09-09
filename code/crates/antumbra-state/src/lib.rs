@@ -1,9 +1,11 @@
-//! ANTUMBRA state layer: the ledger (ADR-024).
+//! ANTUMBRA state layer: the ledger (ADR-024, ADR-026).
 //!
 //! The ordering layer (ADR-013) deferred its state rules to this
 //! crate: existence, unspentness, double-spend resolution by the
-//! consensus order, conservation, and the emission transaction of
-//! ADR-024 with its calendar, its treasury split and its maturity.
+//! consensus order, the key binding of an input to the spend key of
+//! the output it spends (ADR-026), conservation, and the emission
+//! transaction of ADR-024 with its calendar, its treasury split and
+//! its maturity.
 //!
 //! The same three rules as the other protocol crates apply:
 //!

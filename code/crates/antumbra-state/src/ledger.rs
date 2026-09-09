@@ -1,15 +1,19 @@
 //! The UTXO ledger: the state rules the ordering layer defers
-//! (ADR-013), under the emission transaction (ADR-024).
+//! (ADR-013), under the emission transaction (ADR-024) and the key
+//! binding (ADR-026).
 //!
 //! The ledger consumes the consensus order of a tip and the
-//! payloads of its blocks, and applies three rules, in order:
+//! payloads of its blocks, and applies its rules, in order:
 //! existence (a referenced output was created), unspentness (no
 //! output is spent twice — the first spender of the total order
-//! wins), and conservation (a transaction's inputs equal its
-//! outputs plus its fee; a coinbase's outputs equal the reward of
-//! the slot plus the fees of its block). Every rule is enforced on
-//! a block before any mutation: a rejected block leaves the ledger
-//! exactly where it was.
+//! wins), the key binding (the key an input claims is the spend
+//! key of the output's address — a theft is rejected, signature or
+//! no signature), maturity (a coinbase output spends `MATURITY`
+//! slots after its slot), and conservation (a transaction's inputs
+//! equal its outputs plus its fee; a coinbase's outputs equal the
+//! reward of the slot plus the fees of its block). Every rule is
+//! enforced on a block before any mutation: a rejected block leaves
+//! the ledger exactly where it was.
 //!
 //! The reference rebuild is total: a reorganization rebuilds from
 //! the winning order, deterministically, like the reference DAG
@@ -302,6 +306,14 @@ impl Ledger {
             if scratch.spent.contains(&reference) {
                 return Err(StateError::DoubleSpend(reference));
             }
+            // The key binding (ADR-026): the claimed key must be
+            // the spend key of the output's address. Existence and
+            // unspentness first, ownership before the clock: a
+            // reference both unbound and immature reports the
+            // binding, so the reject names stay stable.
+            if entry.address().spend() != input.key() {
+                return Err(StateError::KeyNotBound(reference));
+            }
             // Maturity: a coinbase output spends `MATURITY` slots
             // after its creating slot.
             if let Some(creating) = entry.coinbase_slot {
@@ -518,6 +530,9 @@ pub enum StateError {
     /// A referenced output is already spent: the first spender of
     /// the order wins.
     DoubleSpend(OutputRef),
+    /// The claimed key is not the spend key of the spent output's
+    /// address: a theft, signature or no signature (ADR-026).
+    KeyNotBound(OutputRef),
     /// A coinbase output spent before maturity.
     ImmatureCoinbase {
         reference: OutputRef,
@@ -577,6 +592,11 @@ impl core::fmt::Display for StateError {
             Self::DoubleSpend(reference) => write!(
                 f,
                 "{} is already spent: the first spender of the order wins",
+                reference_text(reference)
+            ),
+            Self::KeyNotBound(reference) => write!(
+                f,
+                "{} is claimed by a key that is not the spend key of its address",
                 reference_text(reference)
             ),
             Self::ImmatureCoinbase {
@@ -645,6 +665,7 @@ mod tests {
             StateError::NoInputs,
             StateError::UnknownOutput(reference),
             StateError::DoubleSpend(reference),
+            StateError::KeyNotBound(reference),
             StateError::ImmatureCoinbase {
                 reference,
                 creating_slot: 1,
@@ -677,5 +698,197 @@ mod tests {
     fn a_reference_formats_as_tx_colon_index() {
         let reference = OutputRef::new(Hash([7u8; 32]), 3);
         assert_eq!(reference_text(&reference), format!("{}:3", Hash([7u8; 32])));
+    }
+
+    #[test]
+    fn a_theft_is_rejected_before_the_clock_and_after_maturity() {
+        use antumbra_primitives::{KeyPair, Network};
+        use antumbra_tx::{TxIn, TxOut};
+
+        fn coinbase_of(slot: u64, height: u64, payee: Address) -> Transaction {
+            let (_, treasury, total) = expected_coinbase(slot, 0);
+            Transaction::new(
+                TxType::Coinbase,
+                Amount::ZERO,
+                Vec::new(),
+                vec![
+                    TxOut::new(payee, Amount::from_atomic(total - treasury)),
+                    TxOut::new(devnet_treasury_address(), Amount::from_atomic(treasury)),
+                ],
+                height.to_le_bytes().to_vec(),
+            )
+        }
+
+        // A miner, an owner paid by transfer, and a thief: distinct
+        // seeds, distinct spend keys.
+        let miner_spend = KeyPair::from_seed(&[1u8; 32]);
+        let miner_view = KeyPair::from_seed(&[2u8; 32]);
+        let miner_address =
+            Address::new(Network::Devnet, miner_spend.public(), miner_view.public());
+        let owner_spend = KeyPair::from_seed(&[3u8; 32]);
+        let owner_view = KeyPair::from_seed(&[4u8; 32]);
+        let owner_address =
+            Address::new(Network::Devnet, owner_spend.public(), owner_view.public());
+        let thief_spend = KeyPair::from_seed(&[5u8; 32]);
+        let thief_view = KeyPair::from_seed(&[6u8; 32]);
+        let thief_address =
+            Address::new(Network::Devnet, thief_spend.public(), thief_view.public());
+        assert_ne!(owner_spend.public(), thief_spend.public());
+
+        let mut ledger = Ledger::new();
+        ledger.apply_block(0, &[]).expect("the genesis is empty");
+
+        // The coinbase of slot 1: the value and the treasury split
+        // exactly as the calendar computes them.
+        let (count, _treasury, _total) = expected_coinbase(1, 0);
+        assert_eq!(count, 2);
+        let coinbase = coinbase_of(1, 1, miner_address);
+        ledger
+            .apply_block(1, std::slice::from_ref(&coinbase))
+            .expect("the coinbase applies");
+        let miner_output = OutputRef::new(coinbase.tx_id(), 0);
+        let miner_value = ledger
+            .utxo(&miner_output)
+            .expect("the miner output exists")
+            .amount();
+
+        // A coinbase-only chain to slot 11: the miner output of
+        // slot 1 is mature from slot 11 on.
+        let mut height: u64 = 1;
+        while ledger.applied() < 1 + MATURITY {
+            height += 1;
+            let slot = ledger.applied();
+            ledger
+                .apply_block(height, &[coinbase_of(slot, height, miner_address)])
+                .expect("the chain mines");
+        }
+
+        // The theft: the thief claims the miner's output with the
+        // thief's key. The output is mature; the conservation is
+        // exact; the signature would verify (the state layer never
+        // looks). Only the binding can refuse it.
+        let theft = Transaction::new(
+            TxType::Transfer,
+            Amount::ZERO,
+            vec![TxIn::unsigned(miner_output, thief_spend.public())],
+            vec![TxOut::new(thief_address, miner_value)],
+            Vec::new(),
+        );
+        let mut payload = vec![
+            coinbase_of(ledger.applied(), height + 1, miner_address),
+            theft,
+        ];
+        payload.sort_by_key(Transaction::tx_id);
+        let before = ledger.snapshot();
+        match ledger.apply_block(height + 1, &payload) {
+            Err(StateError::KeyNotBound(reference)) => assert_eq!(reference, miner_output),
+            other => panic!("the theft must be refused, found {other:?}"),
+        }
+        assert_eq!(
+            ledger.snapshot(),
+            before,
+            "the refused theft leaves the ledger where it stood"
+        );
+
+        // The honest spend of the same output applies.
+        let honest = Transaction::new(
+            TxType::Transfer,
+            Amount::ZERO,
+            vec![TxIn::unsigned(miner_output, miner_spend.public())],
+            vec![TxOut::new(owner_address, miner_value)],
+            Vec::new(),
+        );
+        let mut payload = vec![
+            coinbase_of(ledger.applied(), height + 1, miner_address),
+            honest,
+        ];
+        payload.sort_by_key(Transaction::tx_id);
+        ledger
+            .apply_block(height + 1, &payload)
+            .expect("the honest spend applies");
+        assert!(ledger.is_spent(&miner_output));
+    }
+
+    #[test]
+    fn an_unbound_and_immature_reference_reports_the_binding() {
+        use antumbra_primitives::{KeyPair, Network};
+        use antumbra_tx::{TxIn, TxOut};
+
+        // The rule order of ADR-026: existence, unspentness,
+        // ownership, maturity. A reference both unbound and
+        // immature names the binding, not the clock.
+        let owner_spend = KeyPair::from_seed(&[7u8; 32]);
+        let owner_address = Address::new(
+            Network::Devnet,
+            owner_spend.public(),
+            KeyPair::from_seed(&[8u8; 32]).public(),
+        );
+        let thief_spend = KeyPair::from_seed(&[9u8; 32]);
+
+        fn coinbase_of(slot: u64, height: u64, payee: Address) -> Transaction {
+            let (_, treasury, total) = expected_coinbase(slot, 0);
+            Transaction::new(
+                TxType::Coinbase,
+                Amount::ZERO,
+                Vec::new(),
+                vec![
+                    TxOut::new(payee, Amount::from_atomic(total - treasury)),
+                    TxOut::new(devnet_treasury_address(), Amount::from_atomic(treasury)),
+                ],
+                height.to_le_bytes().to_vec(),
+            )
+        }
+
+        let mut ledger = Ledger::new();
+        ledger.apply_block(0, &[]).expect("the genesis is empty");
+        let (count, _treasury, _total) = expected_coinbase(1, 0);
+        assert_eq!(count, 2);
+        let coinbase = coinbase_of(1, 1, owner_address);
+        ledger
+            .apply_block(1, std::slice::from_ref(&coinbase))
+            .expect("the coinbase applies");
+        let reference = OutputRef::new(coinbase.tx_id(), 0);
+        let value = ledger.utxo(&reference).expect("the output exists").amount();
+
+        // Slot 2: the coinbase of slot 1 is immature (matures at
+        // 11), and the key is the thief's: the binding fires.
+        let theft = Transaction::new(
+            TxType::Transfer,
+            Amount::ZERO,
+            vec![TxIn::unsigned(reference, thief_spend.public())],
+            vec![TxOut::new(
+                Address::new(
+                    Network::Devnet,
+                    thief_spend.public(),
+                    KeyPair::from_seed(&[10u8; 32]).public(),
+                ),
+                value,
+            )],
+            Vec::new(),
+        );
+        let mut payload = vec![coinbase_of(2, 2, owner_address), theft];
+        payload.sort_by_key(Transaction::tx_id);
+        match ledger.apply_block(2, &payload) {
+            Err(StateError::KeyNotBound(bound)) => assert_eq!(bound, reference),
+            other => panic!("the binding fires before the clock, found {other:?}"),
+        }
+
+        // The same reference, honestly keyed, immature: the clock
+        // fires — the binding passed.
+        let early = Transaction::new(
+            TxType::Transfer,
+            Amount::ZERO,
+            vec![TxIn::unsigned(reference, owner_spend.public())],
+            vec![TxOut::new(owner_address, value)],
+            Vec::new(),
+        );
+        let mut payload = vec![coinbase_of(2, 2, owner_address), early];
+        payload.sort_by_key(Transaction::tx_id);
+        match ledger.apply_block(2, &payload) {
+            Err(StateError::ImmatureCoinbase {
+                creating_slot: 1, ..
+            }) => {}
+            other => panic!("the immature spend must still be refused, found {other:?}"),
+        }
     }
 }

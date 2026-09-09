@@ -2,14 +2,15 @@
 """Cross-implementation vector generator for antumbra-state.
 
 Independent re-implementation of every output-producing routine
-of the state layer (ADR-024): the emission calendar (the
+of the state layer (ADR-024, ADR-026): the emission calendar (the
 Lucas-Fibonacci closed form of floor(E0 * R^n), the per-slot
 reward spread, the treasury share and window), the devnet
 treasury address, the coinbase rules, and the UTXO ledger itself
-(existence, unspentness, double-spend resolution by order,
-conservation, maturity, the atomic apply of a block, the rebuild
-of a reorganized order). Keccak-256 and Ed25519 come from
-pycryptodome; the calendar, the codec and the ledger are
+(existence, unspentness, double-spend resolution by order, the
+key binding of an input to the spend key of the output's
+address, conservation, maturity, the atomic apply of a block,
+the rebuild of a reorganized order). Keccak-256 and Ed25519 come
+from pycryptodome; the calendar, the codec and the ledger are
 re-implemented from the ADR text alone. The output is the
 archived vector set consumed by the Rust test suite: both
 implementations must agree bit for bit (CONTRIBUTING.md,
@@ -43,6 +44,7 @@ from pathlib import Path
 
 from Crypto.Hash import keccak
 from Crypto.PublicKey import ECC
+from Crypto.Signature import eddsa
 
 OUTPUT = (
     Path(__file__).resolve().parents[1]
@@ -465,6 +467,12 @@ class Ledger:
             if ref in spent_refs:
                 raise StateError("DoubleSpend", ref_text(ref))
             address, amount, coinbase_slot = entry
+            # The key binding (ADR-026): the claimed key must be the
+            # spend key of the output's address (bytes 1..33 of the
+            # raw form). Ownership before the clock: a reference
+            # both unbound and immature names the binding.
+            if i["key"] != address[1:33]:
+                raise StateError("KeyNotBound", ref_text(ref))
             if coinbase_slot is not None and slot < coinbase_slot + MATURITY:
                 raise StateError(
                     "ImmatureCoinbase",
@@ -525,6 +533,63 @@ def random_address() -> bytes:
     spend = ed25519_public(seed)
     view = ed25519_public(view_seed_of(seed))
     return address_raw(DEVNET_PREFIX, spend, view)
+
+
+# The spend public key of every address the generator constructs
+# honestly: an input that spends an output of one of these parties
+# claims the recorded key (ADR-026). Addresses built for the wrong
+# side of a rejection (a foreign treasury, a thief's destination)
+# stay unregistered: no honest input ever claims them.
+SPEND_KEYS: dict = {}
+
+
+def owned_address() -> bytes:
+    """A random address whose spend key the generator records."""
+    seed = random_seed_bytes()
+    spend = ed25519_public(seed)
+    view = ed25519_public(view_seed_of(seed))
+    address = address_raw(DEVNET_PREFIX, spend, view)
+    SPEND_KEYS[address] = spend
+    return address
+
+
+def spend_key_of(address: bytes) -> bytes:
+    """The recorded spend key of an owned address."""
+    key = SPEND_KEYS.get(address)
+    assert key is not None, "the address is not an owned party"
+    return key
+
+
+def thief_destination(thief_seed: bytes) -> bytes:
+    """The thief's own address: unregistered, spendable only by
+    the thief — which is exactly what the binding refuses."""
+    return address_raw(
+        DEVNET_PREFIX,
+        ed25519_public(thief_seed),
+        ed25519_public(view_seed_of(thief_seed)),
+    )
+
+
+def signed_thief_transfer(
+    tx_hash: bytes, index: int, thief_seed: bytes, destination: bytes, amount: int, fee: int
+) -> Tx:
+    """A one-input theft, correctly signed by the thief.
+
+    The signature is real: it verifies against the claimed key. The
+    point of the vector is that the ledger refuses the block anyway
+    - the claimed key is not the spend key of the output's
+    address, and no signature, however valid, changes that.
+    """
+    inputs = [unsigned_input(tx_hash, index, ed25519_public(thief_seed))]
+    theft = make_transfer(inputs, [output(destination, amount)], fee)
+    # The signing message: the canonical encoding with every
+    # signature zeroed, exactly as the transaction layer defines
+    # it (the inputs above are unsigned, so the encoding is the
+    # message).
+    message = theft.encode()
+    key = ECC.construct(curve="ed25519", seed=thief_seed)
+    theft.inputs[0]["signature"] = eddsa.new(key, mode="rfc8032").sign(message)
+    return theft
 
 
 def random_key() -> bytes:
@@ -630,11 +695,11 @@ def apply_and_snapshot(case: dict) -> dict:
 
 # --- Case 1: the plain chain, coinbases then chained transfers ----
 
-MINER_A = random_address()
-MINER_B = random_address()
-ALICE = random_address()
-BOB = random_address()
-CAROL = random_address()
+MINER_A = owned_address()
+MINER_B = owned_address()
+ALICE = owned_address()
+BOB = owned_address()
+CAROL = owned_address()
 
 
 def resolve_chain_1():
@@ -652,7 +717,7 @@ def resolve_chain_1():
     tx_id_3, amount_3 = miner_outputs[3]
     fee = 1
     transfer = make_transfer(
-        [unsigned_input(tx_id_3, 0, random_key())],
+        [unsigned_input(tx_id_3, 0, spend_key_of(MINER_A))],
         [output(ALICE, amount_3 // 2), output(BOB, amount_3 - amount_3 // 2 - fee)],
         fee,
     )
@@ -664,7 +729,7 @@ def resolve_chain_1():
     alice_out = transfer.tx_id(), transfer.outputs[0]["amount"]
     fee2 = 2
     transfer2 = make_transfer(
-        [unsigned_input(alice_out[0], 0, random_key())],
+        [unsigned_input(alice_out[0], 0, spend_key_of(ALICE))],
         [output(CAROL, alice_out[1] - fee2)],
         fee2,
     )
@@ -677,12 +742,12 @@ def resolve_chain_1():
     bob_out = transfer.tx_id(), transfer.outputs[1]["amount"]
     fee3 = 3
     t1 = make_transfer(
-        [unsigned_input(bob_out[0], 1, random_key())],
+        [unsigned_input(bob_out[0], 1, spend_key_of(BOB))],
         [output(ALICE, bob_out[1] - fee3 - 5), output(BOB, 5)],
         fee3,
     )
     t2 = make_transfer(
-        [unsigned_input(t1.tx_id(), 0, random_key())],
+        [unsigned_input(t1.tx_id(), 0, spend_key_of(ALICE))],
         [output(CAROL, t1.outputs[0]["amount"] - 1)],
         1,
     )
@@ -722,7 +787,7 @@ def miner_output_of(prefix: dict, height: int):
     return coinbase.tx_id(), coinbase.outputs[0]["amount"]
 
 
-def reject_case(name: str, prefix_length: int, build_bad) -> dict:
+def reject_case(name: str, prefix_length: int, build_bad, expect=None) -> dict:
     """A valid coinbase-only prefix, then one bad block: the apply
     fails, the ledger stands at the prefix."""
     prefix = coinbase_only_prefix(name, prefix_length, MINER_A)
@@ -742,6 +807,10 @@ def reject_case(name: str, prefix_length: int, build_bad) -> dict:
     except StateError as e:
         error = e.name
     assert error is not None, f"reject case {name} was accepted"
+    if expect is not None:
+        assert error == expect, (
+            f"reject case {name} fired {error}, expected {expect}"
+        )
     good = Ledger()
     good.apply_order(prefix["order"], fetch_of(prefix["by_id"]))
     assert ledger.snapshot() == good.snapshot(), (
@@ -827,7 +896,7 @@ def main() -> None:
             tx_id_2, amount_2 = coinbase.tx_id(), coinbase.outputs[0]["amount"]
     fee = 1
     transfer = make_transfer(
-        [unsigned_input(tx_id_2, 0, random_key())],
+        [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
         [output(ALICE, amount_2 - fee)],
         fee,
     )
@@ -915,12 +984,12 @@ def main() -> None:
         # slot 13 (the rejection block).
         tx_id_2, amount_2 = miner_output_of(prefix, 2)
         first = make_transfer(
-            [unsigned_input(tx_id_2, 0, random_key())],
+            [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
             [output(ALICE, amount_2 - 1)],
             1,
         )
         second = make_transfer(
-            [unsigned_input(tx_id_2, 0, random_key())],
+            [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
             [output(BOB, amount_2 - 1)],
             1,
         )
@@ -938,12 +1007,12 @@ def main() -> None:
     def double_spend_intra(prefix, h):
         tx_id_2, amount_2 = miner_output_of(prefix, 2)
         t1 = make_transfer(
-            [unsigned_input(tx_id_2, 0, random_key())],
+            [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
             [output(ALICE, amount_2 - 1)],
             1,
         )
         t2 = make_transfer(
-            [unsigned_input(tx_id_2, 0, random_key())],
+            [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
             [output(BOB, amount_2 - 1)],
             1,
         )
@@ -957,7 +1026,7 @@ def main() -> None:
         # rejection block sits at slot 12.
         tx_id_3, amount_3 = miner_output_of(prefix, 3)
         early = make_transfer(
-            [unsigned_input(tx_id_3, 0, random_key())],
+            [unsigned_input(tx_id_3, 0, spend_key_of(MINER_A))],
             [output(ALICE, amount_3 - 1)],
             1,
         )
@@ -978,7 +1047,7 @@ def main() -> None:
     def conservation(prefix, h):
         tx_id_2, amount_2 = miner_output_of(prefix, 2)
         short = make_transfer(
-            [unsigned_input(tx_id_2, 0, random_key())],
+            [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
             [output(ALICE, amount_2 - 2)],
             1,
         )
@@ -1005,6 +1074,86 @@ def main() -> None:
 
     rejects.append(reject_case("unsorted-payload", 3, unsorted_payload))
 
+    # The key binding of ADR-026: two thefts, both correctly
+    # signed by the thief, both refused by the ledger alone.
+
+    def theft_of_coinbase(prefix, h):
+        # The matured miner output of block 2 (slot 2, mature from
+        # slot 12), claimed by the thief's key and paid to the
+        # thief's own address. The signature verifies; the key is
+        # not the spend key of the output's address.
+        tx_id_2, amount_2 = miner_output_of(prefix, 2)
+        thief_seed = random_seed_bytes()
+        fee = 1
+        theft = signed_thief_transfer(
+            tx_id_2, 0, thief_seed, thief_destination(thief_seed), amount_2 - fee, fee
+        )
+        return sort_payload([build_coinbase(h, h, fee, MINER_A), theft])
+
+    rejects.append(
+        reject_case("key-not-bound-coinbase", 12, theft_of_coinbase, expect="KeyNotBound")
+    )
+
+    def theft_of_transfer():
+        """A correctly-signed theft of a transfer output: the setup
+        block pays Alice honestly, the theft block claims her
+        output with the thief's key. The prefix runs to slot 12 so
+        the miner output of block 2 is mature for the setup spend;
+        Alice's output is a transfer output, no maturity applies —
+        only the binding can refuse the thief."""
+        name = "key-not-bound-transfer"
+        prefix = coinbase_only_prefix(name, 12, MINER_A)
+        tx_id_2, amount_2 = miner_output_of(prefix, 2)
+        fee = 1
+        setup = make_transfer(
+            [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
+            [output(ALICE, amount_2 - fee)],
+            fee,
+        )
+        setup_block = {
+            "height": 13,
+            "txs": sort_payload([build_coinbase(13, 13, fee, MINER_A), setup]),
+        }
+        alice_tx, alice_amount = setup.tx_id(), setup.outputs[0]["amount"]
+        thief_seed = random_seed_bytes()
+        fee2 = 1
+        theft = signed_thief_transfer(
+            alice_tx, 0, thief_seed, thief_destination(thief_seed), alice_amount - fee2, fee2
+        )
+        theft_block = {
+            "height": 14,
+            "txs": sort_payload([build_coinbase(14, 14, fee2, MINER_A), theft]),
+        }
+        blocks = prefix["blocks"] + [setup_block, theft_block]
+        order = [block_id_of(name, i) for i in range(len(blocks))]
+        by_id = {block_id_of(name, i): blocks[i] for i in range(len(blocks))}
+
+        # The Python ledger must name the binding and stand at the
+        # setup state, prefix plus the honest spend.
+        ledger = Ledger()
+        error = None
+        try:
+            ledger.apply_order(order, fetch_of(by_id))
+        except StateError as e:
+            error = e.name
+        assert error == "KeyNotBound", f"reject case {name} fired {error}"
+        good = Ledger()
+        good.apply_order(
+            prefix["order"] + [block_id_of(name, 13)], fetch_of(by_id)
+        )
+        assert ledger.snapshot() == good.snapshot(), (
+            f"reject case {name} mutated the ledger"
+        )
+        return {
+            "name": name,
+            "blocks": encode_blocks(blocks),
+            "order": [b.hex() for b in order],
+            "error": error,
+            "after_reject": {"stats": ledger.stats(), "utxos": ledger.snapshot()},
+        }
+
+    rejects.append(theft_of_transfer())
+
     # The reorg: a shared prefix, two suffixes, two rebuilds.
     prefix = coinbase_only_prefix("reorg", 11, MINER_A)
     pool = dict(prefix["by_id"])
@@ -1028,7 +1177,7 @@ def main() -> None:
             tx_id_2, amount_2 = miner_output_of(prefix, 2)
             fee = 1
             transfer = make_transfer(
-                [unsigned_input(tx_id_2, 0, random_key())],
+                [unsigned_input(tx_id_2, 0, spend_key_of(MINER_A))],
                 [output(CAROL, amount_2 - fee)],
                 fee,
             )
@@ -1064,8 +1213,9 @@ def main() -> None:
         "expected_b": expected_b,
     }
 
-    # Encode-decode-encode identity over every generated transaction.
-    for case in [case_chain, case_maturity]:
+    # Encode-decode-encode identity over every generated
+    # transaction, the signed thefts included.
+    for case in [case_chain, case_maturity] + rejects:
         for block in case["blocks"]:
             for tx_hex in block["txs"]:
                 tx = Tx.decode(bytes.fromhex(tx_hex))
@@ -1076,9 +1226,12 @@ def main() -> None:
         "comment": (
             "ANTUMBRA state layer cross vectors: the emission "
             "calendar, the coinbase rules, the UTXO ledger over "
-            "generated orders, the rejection battery and the reorg "
-            "rebuild. Produced by gen_state_vectors.py; the Rust "
-            "suite must agree bit for bit."
+            "generated orders (the key binding of ADR-026: honest "
+            "inputs claim the spend key of the output's address, "
+            "correctly-signed thefts are refused), the rejection "
+            "battery and the reorg rebuild. Produced by "
+            "gen_state_vectors.py; the Rust suite must agree bit "
+            "for bit."
         ),
         "generator": {"seed": SEED, "implementation": "python3 + pycryptodome"},
         "calendar": {
