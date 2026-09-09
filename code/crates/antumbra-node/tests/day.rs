@@ -6,12 +6,13 @@
 use antumbra_dag::payload_root;
 use antumbra_dag::{Block, Header};
 use antumbra_node::engine::{Breach, Engine};
-use antumbra_primitives::Address;
+use antumbra_node::wallet::Wallet;
+use antumbra_primitives::{Address, KeyPair, Network};
 use antumbra_state::coinbase::{
     reward_of_slot, treasury_active_at_slot, treasury_share_of, MATURITY,
 };
 use antumbra_state::ledger::{Ledger, StateError};
-use antumbra_tx::{Amount, OutputRef, Transaction};
+use antumbra_tx::{Amount, OutputRef, Transaction, TxIn, TxOut, TxType};
 
 /// The test difficulty: fast to mine, real to check.
 const D: u32 = 4;
@@ -44,6 +45,52 @@ fn build_spend(
 /// Runs a day slice and returns the outcome.
 fn day(blocks: u64, spend_every: u64) -> antumbra_node::DayOutcome {
     antumbra_node::run_day(blocks, D, spend_every, &mut |_| {}).expect("the day slice holds")
+}
+
+/// The devnet thief: a wallet the spent output never paid. The
+/// theft claims the output with the thief's key and signs it
+/// correctly — the signature verifies, the key is not the
+/// owner's (ADR-026).
+fn thief() -> Wallet {
+    Wallet::from_keys(
+        KeyPair::from_seed(&[0xEE; 32]),
+        KeyPair::from_seed(&[0xEF; 32]),
+        Network::Devnet,
+    )
+}
+
+/// The theft transaction: the value minus the fee to the thief,
+/// claimed and signed by the thief's key.
+fn build_theft(thief: &Wallet, reference: OutputRef, value: Amount) -> Transaction {
+    let draft = Transaction::new(
+        TxType::Transfer,
+        Amount::ZERO,
+        vec![TxIn::unsigned(reference, thief.spend().public())],
+        vec![TxOut::new(thief.address(), Amount::ZERO)],
+        Vec::new(),
+    );
+    let mut fee = Amount::ZERO;
+    for _ in 0..4 {
+        let minimum = FEES
+            .minimum_fee(draft.encode().len(), 0)
+            .expect("the fee is computable");
+        if fee == minimum {
+            break;
+        }
+        fee = minimum;
+    }
+    let remainder = value.checked_sub(fee).expect("the coinbase covers the fee");
+    let mut theft = Transaction::new(
+        TxType::Transfer,
+        fee,
+        vec![TxIn::unsigned(reference, thief.spend().public())],
+        vec![TxOut::new(thief.address(), remainder)],
+        Vec::new(),
+    );
+    theft
+        .sign(core::slice::from_ref(thief.spend()))
+        .expect("the thief signs his own claim");
+    theft
 }
 
 #[test]
@@ -305,4 +352,91 @@ fn the_invalid_coinbase_value_is_a_breach() {
         Err(Breach::Ledger(StateError::CoinbaseValue { .. })) => {}
         other => panic!("the wrong coinbase value must breach, found {other:?}"),
     }
+}
+
+#[test]
+fn the_theft_is_refused_twice() {
+    // Engine one: the admission refusal, then the honest
+    // continuation — the day goes on.
+    let mut engine = Engine::boot(D).expect("the genesis is the protocol constant");
+    for _ in 0..12 {
+        engine.mine_and_apply().expect("the solo step holds");
+    }
+    // The matured coinbase output of slot 1, from the tracker
+    // inventory.
+    let (reference, value) = engine
+        .wallets
+        .miner
+        .tracker
+        .unspent_with_slot()
+        .into_iter()
+        .find(|(_, _, slot)| *slot == Some(1))
+        .map(|(reference, value, _)| (reference, value))
+        .expect("the coinbase of slot 1 is tracked");
+
+    // The theft: correctly signed by the thief's key (the signature
+    // itself verifies — the admission runs the check after the
+    // signature verification), the key is not the owner's.
+    let theft = build_theft(&thief(), reference, value);
+    theft
+        .verify_signatures()
+        .expect("the theft is correctly signed");
+    match engine.submit(&theft) {
+        Err(antumbra_node::AdmitError::KeyNotOwner { reference: claimed }) => {
+            assert_eq!(claimed, reference)
+        }
+        other => panic!("the theft must be refused at admission, found {other:?}"),
+    }
+    assert_eq!(engine.mempool().len(), 0, "the theft is not admitted");
+
+    // The honest spend of the same output is admitted and applies.
+    let alice = engine.wallets.alice.wallet.address();
+    engine
+        .submit(&build_spend(&engine, reference, value, alice))
+        .expect("the honest spend is admitted");
+    engine.mine_and_apply().expect("the honest spend applies");
+    assert!(engine.ledger().is_spent(&reference));
+    let (report, failures) = antumbra_node::invariants::check(&engine, false);
+    assert!(
+        failures.is_empty(),
+        "the invariants hold after the refused theft: {failures:?}"
+    );
+    assert!(report.held());
+
+    // Engine two: the in-block rejection. A hand-built block whose
+    // payload carries the theft; the signature verifies, and the
+    // ledger alone refuses the block — the consensus rule of
+    // ADR-026, the one a remote peer cannot talk its way past.
+    let mut engine = Engine::boot(D).expect("the genesis is the protocol constant");
+    for _ in 0..12 {
+        engine.mine_and_apply().expect("the solo step holds");
+    }
+    let (reference, value) = engine
+        .wallets
+        .miner
+        .tracker
+        .unspent_with_slot()
+        .into_iter()
+        .find(|(_, _, slot)| *slot == Some(1))
+        .map(|(reference, value, _)| (reference, value))
+        .expect("the coinbase of slot 1 is tracked");
+    let theft = build_theft(&thief(), reference, value);
+    let best = engine.store().best_tip();
+    let before = engine.ledger().snapshot();
+    let block = engine.assemble(best, vec![theft]).expect("assembly holds");
+    match engine.insert_block(&block) {
+        Err(Breach::Ledger(StateError::KeyNotBound(bound))) => {
+            assert_eq!(bound, reference)
+        }
+        other => panic!("the in-block theft must breach, found {other:?}"),
+    }
+    assert_eq!(
+        engine.ledger().snapshot(),
+        before,
+        "the refused theft leaves the ledger where it stood"
+    );
+    assert!(
+        !engine.ledger().is_spent(&reference),
+        "the output survives its thief, spendable by its owner"
+    );
 }

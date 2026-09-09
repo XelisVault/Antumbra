@@ -5,11 +5,11 @@
 //! container and fee rules of the transaction layer, the signature
 //! verification, the existence and unspentness of every input in
 //! the ledger and in the mempool itself, the maturity of coinbase
-//! outputs, and **the key binding** — an input must claim the
-//! spend key of the output's address. The ledger does not check
-//! that binding yet (ADR-025 records the gap); the node does,
-//! here, and the consensus rule with its vector set is the next
-//! rail-C change.
+//! outputs, and the key binding — an input must claim the spend
+//! key of the output's address. The binding is a ledger rule since
+//! ADR-026: admission keeps the check as the cheap refusal in
+//! front of the consensus boundary, which the ledger enforces on
+//! every applied block, remote or hand-built.
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -42,7 +42,8 @@ pub enum AdmitError {
         earliest_slot: u64,
     },
     /// The input key is not the spend key of the output's address:
-    /// the node-level key binding of ADR-025.
+    /// the admission-side check of the key binding (ADR-026); the
+    /// ledger enforces the same rule on every applied block.
     KeyNotOwner {
         /// The output reference claimed.
         reference: OutputRef,
