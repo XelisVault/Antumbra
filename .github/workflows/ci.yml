@@ -106,6 +106,32 @@ jobs:
         run: cargo build --workspace --release --locked
         working-directory: code
 
+  node-day:
+    name: Node day
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: code
+      - name: The devnet day slice, twice, deterministically
+        run: |
+          set -euo pipefail
+          cargo run --release --locked --bin antumbra-node -- genesis
+          cargo run --release --locked --bin antumbra-node -- day --blocks 1200 > day-one.txt
+          cargo run --release --locked --bin antumbra-node -- day --blocks 1200 > day-two.txt
+          one=$(grep 'status id' day-one.txt | awk '{print $NF}')
+          two=$(grep 'status id' day-two.txt | awk '{print $NF}')
+          if [ -z "$one" ] || [ "$one" != "$two" ]; then
+            echo "the day is not deterministic: $one vs $two"
+            exit 1
+          fi
+          grep -q 'invariants          held' day-one.txt
+          echo "the day slice holds: status id $one"
+        working-directory: code
+
   docs:
     name: Documentation
     runs-on: ubuntu-latest

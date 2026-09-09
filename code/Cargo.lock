@@ -57,6 +57,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "antumbra-node"
+version = "0.1.0"
+dependencies = [
+ "antumbra-dag",
+ "antumbra-primitives",
+ "antumbra-state",
+ "antumbra-tx",
+]
+
+[[package]]
 name = "antumbra-primitives"
 version = "0.1.0"
 dependencies = [

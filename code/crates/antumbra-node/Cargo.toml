@@ -1,0 +1,25 @@
+[package]
+# The assembly (ADR-025): every protocol crate becomes one
+# running network participant. No external dependency beyond the
+# protocol crates: the binary is auditable in one read.
+name = "antumbra-node"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "The development network node: the assembly of the protocol crates (ADR-025)"
+
+[dependencies]
+antumbra-primitives = { workspace = true }
+antumbra-tx = { workspace = true }
+antumbra-dag = { workspace = true }
+antumbra-state = { workspace = true }
+
+[lib]
+name = "antumbra_node"
+path = "src/lib.rs"
+
+[[bin]]
+name = "antumbra-node"
+path = "src/main.rs"
